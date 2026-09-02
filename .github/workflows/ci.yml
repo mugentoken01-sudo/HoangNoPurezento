@@ -19,7 +19,15 @@ jobs:
       - run: npm run lint --if-present
       - run: npm run typecheck
       - run: npm run test
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: "https://sidpaiftgcwocelqmicp.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "sb_publishable_placeholder"
       - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: "https://sidpaiftgcwocelqmicp.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "sb_publishable_placeholder"
+          SUPABASE_URL: "https://sidpaiftgcwocelqmicp.supabase.co"
+          SUPABASE_PUBLISHABLE_KEY: "sb_publishable_placeholder"
       - name: Secret scan (no .env / service keys in repo)
         run: |
           ! git grep -n "sb_secret" -- ':!.github/workflows/ci.yml' ':!.env.example' || (echo "sb_secret found in tracked files"; exit 1)
