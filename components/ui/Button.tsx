@@ -9,19 +9,26 @@ export function Button({
   ...props
 }: {
   children: React.ReactNode;
-  variant?: "primary" | "secondary" | "ghost" | "danger" | "outline";
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "outline" | "terracotta";
   size?: "sm" | "md" | "lg";
   className?: string;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const base =
-    "inline-flex items-center justify-center font-medium rounded-md transition-all duration-150 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]";
+    "inline-flex items-center justify-center font-medium transition-all duration-200 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#265e2b] focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]";
 
   const variants: Record<string, string> = {
-    primary: "bg-slate-900 text-white shadow-sm hover:bg-slate-800 active:bg-slate-950 border border-transparent",
-    secondary: "bg-white text-slate-800 border border-slate-200 shadow-sm hover:bg-slate-50 hover:border-slate-300 active:bg-slate-100",
-    outline: "bg-transparent text-slate-700 border border-slate-300 hover:bg-slate-100/60 active:bg-slate-100",
-    ghost: "bg-transparent text-slate-700 hover:bg-slate-100 active:bg-slate-200/70 border border-transparent",
-    danger: "bg-red-600 text-white shadow-sm hover:bg-red-700 active:bg-red-800 border border-transparent",
+    primary:
+      "bg-[#265e2b] text-[#faf8f2] shadow-sm hover:bg-[#1d4821] active:bg-[#153618] border border-transparent rounded-[var(--radius-btn,0.4375rem)] font-semibold",
+    terracotta:
+      "bg-[#b04e33] text-[#faf8f2] shadow-sm hover:bg-[#943f27] active:bg-[#78321e] border border-transparent rounded-[var(--radius-btn,0.4375rem)] font-semibold",
+    secondary:
+      "bg-[#ffffff] text-[#182615] border border-[#dfd8c8] shadow-2xs hover:bg-[#f5f1e8] hover:border-[#bcc6b1] active:bg-[#eee8db] rounded-[var(--radius-btn,0.4375rem)]",
+    outline:
+      "bg-transparent text-[#2d3e29] border border-[#dfd8c8] hover:bg-[#f5f1e8] active:bg-[#eee8db] rounded-[var(--radius-btn,0.4375rem)]",
+    ghost:
+      "bg-transparent text-[#2d3e29] hover:bg-[#f0ebe0] active:bg-[#e6decb] border border-transparent rounded-[var(--radius-btn,0.4375rem)]",
+    danger:
+      "bg-[#a13d28] text-[#faf8f2] shadow-sm hover:bg-[#86301d] active:bg-[#6b2516] border border-transparent rounded-[var(--radius-btn,0.4375rem)] font-semibold",
   };
 
   const sizes: Record<string, string> = {
@@ -31,7 +38,7 @@ export function Button({
   };
 
   return (
-    <button className={`${base} ${variants[variant]} ${sizes[size]} ${className}`} {...props}>
+    <button className={`${base} ${variants[variant] ?? variants.primary} ${sizes[size]} ${className}`} {...props}>
       {children}
     </button>
   );

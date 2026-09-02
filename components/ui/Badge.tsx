@@ -2,32 +2,31 @@
 import { useI18n } from "@/lib/i18n";
 
 const styles: Record<string, { bg: string; dot: string }> = {
-  lead: { bg: "bg-slate-50 text-slate-700 border-slate-200", dot: "bg-slate-400" },
-  contacted: { bg: "bg-blue-50 text-blue-700 border-blue-200", dot: "bg-blue-500" },
-  qualified: { bg: "bg-purple-50 text-purple-700 border-purple-200", dot: "bg-purple-500" },
-  meeting: { bg: "bg-amber-50 text-amber-700 border-amber-200", dot: "bg-amber-500" },
-  credit: { bg: "bg-rose-50 text-rose-700 border-rose-200", dot: "bg-rose-500" },
-  approved: { bg: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" },
-  disbursed: { bg: "bg-teal-50 text-teal-700 border-teal-200", dot: "bg-teal-500" },
-  active: { bg: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" },
-  inactive: { bg: "bg-slate-100 text-slate-600 border-slate-200", dot: "bg-slate-400" },
-  lost: { bg: "bg-red-50 text-red-700 border-red-200", dot: "bg-red-500" },
-  won: { bg: "bg-emerald-50 text-emerald-800 border-emerald-300", dot: "bg-emerald-600" },
-  todo: { bg: "bg-slate-100 text-slate-700 border-slate-200", dot: "bg-slate-400" },
-  doing: { bg: "bg-sky-50 text-sky-700 border-sky-200", dot: "bg-sky-500" },
-  done: { bg: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" },
-  manual: { bg: "bg-slate-100 text-slate-700 border-slate-200", dot: "bg-slate-400" },
-  auto_template: { bg: "bg-amber-50 text-amber-700 border-amber-200", dot: "bg-amber-500" },
-  high: { bg: "bg-red-50 text-red-700 border-red-200", dot: "bg-red-500" },
-  medium: { bg: "bg-amber-50 text-amber-700 border-amber-200", dot: "bg-amber-500" },
-  low: { bg: "bg-blue-50 text-blue-700 border-blue-200", dot: "bg-blue-500" },
+  lead: { bg: "bg-[#f2efe6] text-[#4a5944] border-[#d4ccb8]", dot: "bg-[#7d8c76]" },
+  contacted: { bg: "bg-[#eaf1e8] text-[#245b29] border-[#c4d9c2]", dot: "bg-[#387e3f]" },
+  qualified: { bg: "bg-[#f3ecf7] text-[#5f3378] border-[#dac5e6]", dot: "bg-[#7d489b]" },
+  meeting: { bg: "bg-[#fdf5e6] text-[#965a12] border-[#f2dcba]", dot: "bg-[#b8731d]" },
+  credit: { bg: "bg-[#faedea] text-[#a13d28] border-[#f0c7be]", dot: "bg-[#b84b34]" },
+  approved: { bg: "bg-[#eaf5eb] text-[#1b6325] border-[#bde0c1]", dot: "bg-[#288536]" },
+  disbursed: { bg: "bg-[#e6f3eb] text-[#135223] border-[#b3dac0]", dot: "bg-[#1e6f32]" },
+  active: { bg: "bg-[#eaf5eb] text-[#1b6325] border-[#bde0c1]", dot: "bg-[#288536]" },
+  inactive: { bg: "bg-[#f0ebe0] text-[#576750] border-[#dfd8c8]", dot: "bg-[#7d8c76]" },
+  lost: { bg: "bg-[#faedea] text-[#a13d28] border-[#f0c7be]", dot: "bg-[#b84b34]" },
+  won: { bg: "bg-[#eaf5eb] text-[#135223] border-[#bde0c1]", dot: "bg-[#1e6f32]" },
+  todo: { bg: "bg-[#f0ebe0] text-[#576750] border-[#dfd8c8]", dot: "bg-[#7d8c76]" },
+  doing: { bg: "bg-[#eaf1e8] text-[#245b29] border-[#c4d9c2]", dot: "bg-[#387e3f]" },
+  done: { bg: "bg-[#eaf5eb] text-[#1b6325] border-[#bde0c1]", dot: "bg-[#288536]" },
+  manual: { bg: "bg-[#f0ebe0] text-[#576750] border-[#dfd8c8]", dot: "bg-[#7d8c76]" },
+  auto_template: { bg: "bg-[#fdf5e6] text-[#965a12] border-[#f2dcba]", dot: "bg-[#b8731d]" },
+  high: { bg: "bg-[#faedea] text-[#a13d28] border-[#f0c7be]", dot: "bg-[#b84b34]" },
+  medium: { bg: "bg-[#fdf5e6] text-[#965a12] border-[#f2dcba]", dot: "bg-[#b8731d]" },
+  low: { bg: "bg-[#eaf1e8] text-[#245b29] border-[#c4d9c2]", dot: "bg-[#387e3f]" },
 };
 
 export function Badge({ value, label, showDot = true }: { value: string; label?: string; showDot?: boolean }) {
   const { t, dict } = useI18n();
-  const theme = styles[value] ?? { bg: "bg-slate-100 text-slate-700 border-slate-200", dot: "bg-slate-400" };
-  
-  // Auto localized label if label is not explicitly provided
+  const theme = styles[value] ?? { bg: "bg-[#f0ebe0] text-[#576750] border-[#dfd8c8]", dot: "bg-[#7d8c76]" };
+
   let displayLabel = label;
   if (!displayLabel) {
     if (dict.stages[value]) displayLabel = dict.stages[value];

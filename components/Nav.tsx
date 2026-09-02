@@ -37,18 +37,18 @@ export function Nav() {
       <div className="flex items-center gap-2">
         <button
           onClick={() => setLang(lang === "vi" ? "en" : "vi")}
-          className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[#dfd8c8] bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-[#182615] shadow-2xs hover:bg-[#f5f1e8] hover:border-[#bcc6b1] transition-colors"
           title="Toggle Language"
         >
           <span>{lang === "vi" ? "🇻🇳 Tiếng Việt" : "🇬🇧 English"}</span>
-          <span className="text-[10px] text-slate-400 font-mono">({lang.toUpperCase()})</span>
+          <span className="text-[10px] text-[#576750] font-mono">({lang.toUpperCase()})</span>
         </button>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3 sm:gap-4">
       <nav className="flex items-center gap-1">
         {links.map((l) => {
           const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
@@ -56,10 +56,10 @@ export function Nav() {
             <Link
               key={l.href}
               href={l.href}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
+              className={`rounded-full px-3.5 py-1.5 text-xs sm:text-sm font-semibold transition-all duration-150 ${
                 active
-                  ? "bg-slate-900 text-white shadow-sm"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  ? "bg-[#265e2b] text-[#faf8f2] shadow-sm"
+                  : "text-[#2d3e29] hover:bg-[#eee8db] hover:text-[#182615]"
               }`}
             >
               {l.label}
@@ -68,29 +68,29 @@ export function Nav() {
         })}
       </nav>
 
-      <div className="h-4 w-[1px] bg-slate-200" aria-hidden="true" />
+      <div className="h-4 w-[1px] bg-[#dfd8c8]" aria-hidden="true" />
 
       <div className="flex items-center gap-2">
         {/* Language Switcher */}
         <button
           onClick={() => setLang(lang === "vi" ? "en" : "vi")}
-          className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[#dfd8c8] bg-[#ffffff] px-2.5 py-1 text-xs font-semibold text-[#182615] shadow-2xs hover:bg-[#f5f1e8] hover:border-[#bcc6b1] transition-colors"
           title="Chuyển đổi ngôn ngữ / Switch Language"
         >
           <span aria-hidden="true">{lang === "vi" ? "🇻🇳" : "🇬🇧"}</span>
-          <span className="font-semibold">{lang.toUpperCase()}</span>
+          <span className="font-mono text-[11px]">{lang.toUpperCase()}</span>
         </button>
 
         {/* User / Sign Out */}
         {userEmail && (
-          <span className="hidden lg:inline-block max-w-[140px] truncate text-xs text-slate-500 font-mono" title={userEmail}>
+          <span className="hidden lg:inline-block max-w-[140px] truncate text-xs text-[#576750] font-mono" title={userEmail}>
             {userEmail}
           </span>
         )}
 
         <button
           onClick={handleSignOut}
-          className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50 hover:text-red-600 transition-colors"
+          className="rounded-full border border-[#dfd8c8] bg-[#ffffff] px-3 py-1 text-xs font-semibold text-[#576750] shadow-2xs hover:bg-[#faedea] hover:text-[#a13d28] hover:border-[#f0c7be] transition-colors"
         >
           {t("nav.sign_out")}
         </button>

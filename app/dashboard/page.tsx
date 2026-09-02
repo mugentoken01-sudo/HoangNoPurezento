@@ -73,25 +73,25 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Hallmark Header Banner */}
-      <div className="rounded-xl border border-slate-200/90 bg-white p-6 shadow-sm">
+      {/* Hallmark Garden Header Banner */}
+      <div className="rounded-2xl border border-[#dfd8c8] bg-[#ffffff] p-6 sm:p-7 shadow-[0_10px_30px_-15px_rgba(24,38,21,0.08),0_1px_3px_rgba(24,38,21,0.04)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2.5 py-1 text-[10px] font-bold tracking-wider text-slate-700 uppercase">
-              {t("dashboard.badge")}
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f2efe6] border border-[#d4ccb8] px-3 py-0.5 text-[10px] font-mono font-bold tracking-wider text-[#4a5944] uppercase">
+              🌿 {t("dashboard.badge")}
             </span>
-            <h1 className="mt-2 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+            <h1 className="mt-2 text-2xl sm:text-3xl font-serif font-bold tracking-tight text-[#182615]">
               {t("dashboard.title")}
             </h1>
-            <p className="mt-1.5 max-w-3xl text-xs sm:text-sm leading-relaxed text-slate-600">
+            <p className="mt-1.5 max-w-3xl text-xs sm:text-sm leading-relaxed text-[#576750]">
               {t("dashboard.subtitle")}{" "}
-              <span className="font-mono text-xs rounded bg-slate-100 px-1.5 py-0.5 text-slate-700 font-medium">
+              <span className="font-mono text-xs rounded-md bg-[#f2efe6] border border-[#d4ccb8] px-1.5 py-0.5 text-[#2d3e29] font-medium">
                 {DASHBOARD_TIMEZONE}
               </span>
-              . {t("dashboard.due_today")}: <span className="font-semibold text-slate-800">{todayStr}</span> · {t("dashboard.threshold_label")}{" "}
-              <span className="font-semibold text-slate-800">{threshold}d</span>
+              . {t("dashboard.due_today")}: <span className="font-semibold text-[#182615]">{todayStr}</span> · {t("dashboard.threshold_label")}{" "}
+              <span className="font-semibold text-[#182615]">{threshold}d</span>
               {data?.generated_at && (
-                <span className="text-slate-400"> · {formatDateTime(data.generated_at)}</span>
+                <span className="text-[#7d8c76]"> · {formatDateTime(data.generated_at)}</span>
               )}
             </p>
           </div>
@@ -102,7 +102,7 @@ export default function DashboardPage() {
               size="sm"
               onClick={() => fetchSummary(threshold)}
               disabled={loading}
-              className="text-xs font-semibold shadow-xs"
+              className="text-xs font-semibold"
             >
               {loading ? t("common.refreshing") : t("common.refresh")}
             </Button>
@@ -110,13 +110,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Threshold filter control strip */}
-        <div className="mt-4 flex flex-wrap items-center gap-2.5 border-t border-slate-100 pt-4 text-xs">
-          <span className="font-medium text-slate-700">{t("dashboard.threshold_label")}</span>
+        <div className="mt-5 flex flex-wrap items-center gap-2.5 border-t border-[#eee8db] pt-4 text-xs">
+          <span className="font-semibold text-[#2d3e29]">{t("dashboard.threshold_label")}</span>
           <select
             aria-label="Pending threshold"
             value={String(threshold) === custom ? String(threshold) : String(threshold)}
             onChange={(e) => onThresholdChange(e.target.value)}
-            className="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 font-medium focus:border-blue-600 focus:outline-none"
+            className="rounded-lg border border-[#dfd8c8] bg-[#ffffff] px-3 py-1.5 text-xs text-[#182615] font-medium focus:border-[#265e2b] focus:outline-none"
           >
             <option value="7">{t("dashboard.threshold_7d")}</option>
             <option value="14">{t("dashboard.threshold_14d")}</option>
@@ -130,12 +130,12 @@ export default function DashboardPage() {
             max={365}
             value={custom}
             onChange={(e) => setCustom(e.target.value)}
-            className="w-20 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 font-medium focus:border-blue-600 focus:outline-none font-mono"
+            className="w-20 rounded-lg border border-[#dfd8c8] bg-[#ffffff] px-2.5 py-1.5 text-xs text-[#182615] font-medium focus:border-[#265e2b] focus:outline-none font-mono"
           />
-          <Button variant="secondary" size="sm" className="h-7 text-xs" onClick={onCustomApply}>
+          <Button variant="secondary" size="sm" className="h-8 text-xs" onClick={onCustomApply}>
             {t("dashboard.threshold_apply")}
           </Button>
-          <span className="text-[11px] text-slate-400">
+          <span className="text-[11px] text-[#7d8c76] font-mono">
             {t("dashboard.threshold_hint", { tz: DASHBOARD_TIMEZONE })}
           </span>
         </div>
@@ -143,8 +143,8 @@ export default function DashboardPage() {
 
       {error && (
         <Card>
-          <CardBody className="border-l-4 border-red-500 bg-red-50/50 p-4">
-            <p role="alert" className="text-xs font-semibold text-red-700">
+          <CardBody className="border-l-4 border-[#a13d28] bg-[#faedea] p-4">
+            <p role="alert" className="text-xs font-semibold text-[#a13d28]">
               {error}
             </p>
             <Button variant="secondary" size="sm" className="mt-2 text-xs" onClick={() => fetchSummary(threshold)}>
@@ -155,7 +155,7 @@ export default function DashboardPage() {
       )}
 
       {/* 4 Operations Widgets Grid */}
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* Widget 1: Follow-up today */}
         <WidgetCard
           title={t("dashboard.follow_ups_title")}
@@ -167,31 +167,33 @@ export default function DashboardPage() {
           empty={!!data && data.follow_ups.length === 0}
         >
           {!data ? null : data.follow_ups.length === 0 ? (
-            <p className="text-xs leading-relaxed text-slate-500">
+            <p className="text-xs leading-relaxed text-[#576750]">
               {t("dashboard.follow_ups_empty")}
             </p>
           ) : (
-            <ul className="space-y-2.5">
+            <ul className="space-y-3">
               {data.follow_ups.slice(0, 20).map((r) => (
                 <li
                   key={r.note_id}
-                  className={`rounded-lg border p-3 transition-colors ${
-                    r.overdue ? "bg-amber-50/70 border-amber-200/90" : "bg-white border-slate-200/80"
+                  className={`rounded-xl border p-3.5 transition-all ${
+                    r.overdue
+                      ? "bg-[#fdf5e6] border-[#f2dcba] shadow-2xs"
+                      : "bg-[#ffffff] border-[#dfd8c8] hover:border-[#bcc6b1]"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+                        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${
                           r.overdue
-                            ? "bg-amber-100 border-amber-300 text-amber-800"
-                            : "bg-slate-100 border-slate-200 text-slate-700"
+                            ? "bg-[#fdeed6] border-[#f2dcba] text-[#965a12]"
+                            : "bg-[#f2efe6] border-[#d4ccb8] text-[#4a5944]"
                         }`}
                       >
                         <span aria-hidden="true">{r.overdue ? "⚠" : "•"}</span>{" "}
                         {r.overdue ? t("dashboard.overdue") : t("dashboard.due_today")}
                       </span>
-                      <span className="text-xs text-slate-500 font-mono">
+                      <span className="text-xs text-[#576750] font-mono">
                         {formatDate(r.next_action_date)}
                       </span>
                     </div>
@@ -199,17 +201,17 @@ export default function DashboardPage() {
                   </div>
                   <Link
                     href={`/customers/${r.customer_id}`}
-                    className="mt-1.5 block text-sm font-bold text-slate-900 hover:text-blue-600 hover:underline"
+                    className="mt-2 block text-sm font-serif font-bold text-[#182615] hover:text-[#265e2b] hover:underline"
                   >
                     {r.company_name}
                   </Link>
-                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-600">
+                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#41503b]">
                     {r.content}
                   </p>
                 </li>
               ))}
               {data.follow_ups.length > 20 && (
-                <li className="text-[11px] text-slate-400 text-center pt-1">
+                <li className="text-[11px] text-[#7d8c76] text-center pt-1 font-mono">
                   {t("dashboard.follow_ups_showing", { count: data.follow_ups.length })}
                 </li>
               )}
@@ -228,30 +230,32 @@ export default function DashboardPage() {
           empty={!!data && data.today_tasks.length === 0}
         >
           {!data ? null : data.today_tasks.length === 0 ? (
-            <p className="text-xs leading-relaxed text-slate-500">
+            <p className="text-xs leading-relaxed text-[#576750]">
               {t("dashboard.today_tasks_empty")}
             </p>
           ) : (
-            <ul className="space-y-2.5">
+            <ul className="space-y-3">
               {data.today_tasks.slice(0, 20).map((r) => (
                 <li
                   key={r.task_id}
-                  className={`rounded-lg border p-3 transition-colors ${
-                    r.overdue ? "bg-rose-50/70 border-rose-200/90" : "bg-white border-slate-200/80"
+                  className={`rounded-xl border p-3.5 transition-all ${
+                    r.overdue
+                      ? "bg-[#faedea] border-[#f0c7be] shadow-2xs"
+                      : "bg-[#ffffff] border-[#dfd8c8] hover:border-[#bcc6b1]"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+                        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${
                           r.overdue
-                            ? "bg-rose-100 border-rose-300 text-rose-800"
-                            : "bg-slate-100 border-slate-200 text-slate-700"
+                            ? "bg-[#faedea] border-[#f0c7be] text-[#a13d28]"
+                            : "bg-[#f2efe6] border-[#d4ccb8] text-[#4a5944]"
                         }`}
                       >
                         {r.overdue ? t("dashboard.overdue") : t("dashboard.due_today")}
                       </span>
-                      <span className="text-xs text-slate-500 font-mono">{formatDate(r.due_date)}</span>
+                      <span className="text-xs text-[#576750] font-mono">{formatDate(r.due_date)}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Badge value={r.status} />
@@ -260,15 +264,15 @@ export default function DashboardPage() {
                   </div>
                   <Link
                     href={`/customers/${r.customer_id}`}
-                    className="mt-1.5 block text-sm font-bold text-slate-900 hover:text-blue-600 hover:underline"
+                    className="mt-2 block text-sm font-serif font-bold text-[#182615] hover:text-[#265e2b] hover:underline"
                   >
                     {r.company_name}{" "}
-                    <span className="font-normal text-slate-600">· {r.title}</span>
+                    <span className="font-sans font-normal text-[#576750]">· {r.title}</span>
                   </Link>
                 </li>
               ))}
               {data.today_tasks.length > 20 && (
-                <li className="text-[11px] text-slate-400 text-center pt-1">
+                <li className="text-[11px] text-[#7d8c76] text-center pt-1 font-mono">
                   {t("dashboard.follow_ups_showing", { count: data.today_tasks.length })}
                 </li>
               )}
@@ -295,12 +299,12 @@ export default function DashboardPage() {
                       key={s}
                       href={`/customers?stage=${s}`}
                       aria-label={`${localizedStage} — ${count}`}
-                      className="group rounded-lg border border-slate-200/90 bg-white p-2.5 text-center transition-all hover:border-blue-500 hover:bg-blue-50/40 hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                      className="group rounded-xl border border-[#dfd8c8] bg-[#ffffff] p-2.5 text-center transition-all hover:border-[#265e2b] hover:bg-[#eaf1e8]/50 hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#265e2b]"
                     >
-                      <div className="text-[10px] font-bold tracking-tight text-slate-500 uppercase group-hover:text-blue-700 truncate" title={localizedStage}>
+                      <div className="text-[10px] font-bold tracking-tight text-[#576750] uppercase group-hover:text-[#265e2b] truncate font-mono" title={localizedStage}>
                         {localizedStage}
                       </div>
-                      <div className="mt-1 text-lg font-bold tabular-nums text-slate-900 group-hover:text-blue-700">
+                      <div className="mt-1 text-lg font-serif font-bold tabular-nums text-[#182615] group-hover:text-[#265e2b]">
                         {count}
                       </div>
                     </Link>
@@ -308,22 +312,22 @@ export default function DashboardPage() {
                 })}
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 pt-1">
+              <div className="flex flex-wrap items-center gap-2 pt-2">
                 <Link
                   href="/pipeline"
-                  className="inline-flex items-center rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 transition"
+                  className="inline-flex items-center rounded-full bg-[#265e2b] px-4 py-2 text-xs font-semibold text-[#faf8f2] shadow-sm hover:bg-[#1d4821] transition"
                 >
                   {t("dashboard.pipeline_open_button")}
                 </Link>
                 <Link
                   href="/customers"
-                  className="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition"
+                  className="inline-flex items-center rounded-full border border-[#dfd8c8] bg-[#ffffff] px-4 py-2 text-xs font-semibold text-[#2d3e29] shadow-2xs hover:bg-[#f5f1e8] transition"
                 >
                   {t("dashboard.pipeline_all_customers")}
                 </Link>
               </div>
 
-              <p className="text-[11px] leading-relaxed text-slate-400">
+              <p className="text-[11px] leading-relaxed text-[#7d8c76]">
                 {t("dashboard.pipeline_footnote")}
               </p>
             </div>
@@ -341,36 +345,36 @@ export default function DashboardPage() {
           empty={!!data && data.pending_customers.length === 0}
         >
           {!data ? null : data.pending_customers.length === 0 ? (
-            <p className="text-xs leading-relaxed text-slate-500">
+            <p className="text-xs leading-relaxed text-[#576750]">
               {t("dashboard.pending_customers_empty", { threshold })}
             </p>
           ) : (
-            <ul className="space-y-2.5">
+            <ul className="space-y-3">
               {data.pending_customers.slice(0, 20).map((r) => (
-                <li key={r.customer_id} className="rounded-lg border border-slate-200/90 bg-white p-3 shadow-xs">
+                <li key={r.customer_id} className="rounded-xl border border-[#dfd8c8] bg-[#ffffff] p-3.5 shadow-2xs hover:border-[#bcc6b1] transition-all">
                   <div className="flex items-center justify-between gap-2">
                     <Link
                       href={`/customers/${r.customer_id}`}
-                      className="text-sm font-bold text-slate-900 hover:text-blue-600 hover:underline"
+                      className="text-sm font-serif font-bold text-[#182615] hover:text-[#265e2b] hover:underline"
                     >
                       {r.company_name}
                     </Link>
                     <Badge value={r.stage} />
                   </div>
-                  <div className="mt-1.5 text-xs text-slate-500">
+                  <div className="mt-1.5 text-xs text-[#576750]">
                     {r.last_activity_at ? (
                       <>
                         {t("dashboard.last_activity")}{" "}
-                        <span className="font-semibold text-slate-700">{r.last_activity_type}</span> ·{" "}
+                        <span className="font-semibold text-[#2d3e29]">{r.last_activity_type}</span> ·{" "}
                         {formatDateTime(r.last_activity_at)} ·{" "}
-                        <span className="font-bold text-slate-800 font-mono">
+                        <span className="font-bold text-[#182615] font-mono">
                           {r.inactive_days} {t("common.days_ago")}
                         </span>
                       </>
                     ) : (
                       <>
                         {t("dashboard.no_activity_yet")} ·{" "}
-                        <span className="font-bold text-slate-800 font-mono">
+                        <span className="font-bold text-[#182615] font-mono">
                           {r.inactive_days} {t("common.days_since")}
                         </span>
                       </>
@@ -379,7 +383,7 @@ export default function DashboardPage() {
                 </li>
               ))}
               {data.pending_customers.length > 20 && (
-                <li className="text-[11px] text-slate-400 text-center pt-1">
+                <li className="text-[11px] text-[#7d8c76] text-center pt-1 font-mono">
                   {t("dashboard.follow_ups_showing", { count: data.pending_customers.length })}
                 </li>
               )}
@@ -390,11 +394,11 @@ export default function DashboardPage() {
 
       {data?.errors && data.errors.length > 0 && (
         <Card>
-          <CardBody className="border-l-4 border-amber-500 bg-amber-50/50 p-4">
-            <p className="text-xs font-semibold text-amber-900">
+          <CardBody className="border-l-4 border-[#b04e33] bg-[#fdf5e6] p-4">
+            <p className="text-xs font-semibold text-[#965a12]">
               {t("dashboard.partial_data_warning")}
             </p>
-            <ul className="mt-1.5 list-disc pl-5 text-xs text-amber-800 space-y-0.5">
+            <ul className="mt-1.5 list-disc pl-5 text-xs text-[#965a12] space-y-0.5">
               {data.errors.map((e, i) => (
                 <li key={i}>
                   <span className="font-semibold">{e.widget}</span>: {e.message}
@@ -405,7 +409,7 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      <p className="text-center text-[11px] text-slate-400 leading-relaxed max-w-xl mx-auto">
+      <p className="text-center text-[11px] text-[#7d8c76] leading-relaxed max-w-xl mx-auto font-mono">
         {t("dashboard.footer_info", { threshold })}
       </p>
     </div>

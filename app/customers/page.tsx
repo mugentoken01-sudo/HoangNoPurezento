@@ -63,50 +63,50 @@ export default function CustomersPage() {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="rounded-xl border border-slate-200/90 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-[#dfd8c8] bg-[#ffffff] p-6 sm:p-7 shadow-[0_10px_30px_-15px_rgba(24,38,21,0.08),0_1px_3px_rgba(24,38,21,0.04)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2.5 py-1 text-[10px] font-bold tracking-wider text-slate-700 uppercase">
-              {t("customers.badge")}
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f2efe6] border border-[#d4ccb8] px-3 py-0.5 text-[10px] font-mono font-bold tracking-wider text-[#4a5944] uppercase">
+              🌿 {t("customers.badge")}
             </span>
-            <h1 className="mt-2 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+            <h1 className="mt-2 text-2xl sm:text-3xl font-serif font-bold tracking-tight text-[#182615]">
               {t("customers.title")}
             </h1>
-            <p className="mt-1.5 text-xs sm:text-sm text-slate-600 max-w-2xl">
+            <p className="mt-1.5 text-xs sm:text-sm text-[#576750] max-w-2xl">
               {t("customers.subtitle")}
             </p>
           </div>
 
           <Button
             onClick={() => { setEditing(null); setShowForm(true); }}
-            className="text-xs font-semibold shadow-xs"
+            className="text-xs font-semibold"
           >
             {t("customers.new_button")}
           </Button>
         </div>
 
         {/* Filter Controls Strip */}
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-slate-100 pt-4">
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-[#eee8db] pt-4">
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+            <label className="block text-[11px] font-mono font-bold text-[#576750] uppercase mb-1">
               {t("common.search")}
             </label>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("customers.search_placeholder")}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none"
+              className="w-full rounded-lg border border-[#dfd8c8] bg-[#ffffff] px-3.5 py-1.5 text-xs text-[#182615] placeholder:text-[#a2ad9d] focus:border-[#265e2b] focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+            <label className="block text-[11px] font-mono font-bold text-[#576750] uppercase mb-1">
               {t("customers.filter_stage")}
             </label>
             <select
               value={stage}
               onChange={(e) => setStage(e.target.value)}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-800 font-medium focus:border-blue-600 focus:outline-none"
+              className="w-full rounded-lg border border-[#dfd8c8] bg-[#ffffff] px-3 py-1.5 text-xs text-[#182615] font-medium focus:border-[#265e2b] focus:outline-none"
             >
               <option value="">{t("customers.all_stages")}</option>
               {PIPELINE_STAGES.map((s) => (
@@ -118,7 +118,7 @@ export default function CustomersPage() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+            <label className="block text-[11px] font-mono font-bold text-[#576750] uppercase mb-1">
               {t("customers.filter_industry")}
             </label>
             <div className="flex gap-2">
@@ -126,7 +126,7 @@ export default function CustomersPage() {
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
                 placeholder={t("customers.industry_placeholder")}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none"
+                className="w-full rounded-lg border border-[#dfd8c8] bg-[#ffffff] px-3.5 py-1.5 text-xs text-[#182615] placeholder:text-[#a2ad9d] focus:border-[#265e2b] focus:outline-none"
               />
               {(stage || industry || search) && (
                 <Button
@@ -146,16 +146,16 @@ export default function CustomersPage() {
       {loading && (
         <Card>
           <CardBody className="py-12 text-center">
-            <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-slate-900 border-r-transparent" />
-            <p className="mt-2 text-xs font-medium text-slate-500">{t("common.loading")}</p>
+            <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-[#265e2b] border-r-transparent" />
+            <p className="mt-2 text-xs font-medium text-[#576750]">{t("common.loading")}</p>
           </CardBody>
         </Card>
       )}
 
       {err && (
         <Card>
-          <CardBody className="border-l-4 border-red-500 bg-red-50/50 p-4">
-            <p role="alert" className="text-xs font-semibold text-red-700">{err}</p>
+          <CardBody className="border-l-4 border-[#a13d28] bg-[#faedea] p-4">
+            <p role="alert" className="text-xs font-semibold text-[#a13d28]">{err}</p>
             <Button variant="secondary" size="sm" className="mt-2 text-xs" onClick={load}>
               {t("common.retry")}
             </Button>
@@ -165,12 +165,12 @@ export default function CustomersPage() {
 
       {!loading && !err && filteredCustomers.length === 0 && (
         <Card>
-          <CardBody className="py-12 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 font-bold text-lg mb-3">
-              🏢
+          <CardBody className="py-14 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f2efe6] text-[#4a5944] font-bold text-xl mb-3">
+              🌿
             </div>
-            <h3 className="text-sm font-bold text-slate-900">{t("customers.empty_title")}</h3>
-            <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">{t("customers.empty_desc")}</p>
+            <h3 className="text-base font-serif font-bold text-[#182615]">{t("customers.empty_title")}</h3>
+            <p className="mt-1 text-xs text-[#576750] max-w-sm mx-auto">{t("customers.empty_desc")}</p>
             <Button
               onClick={() => { setEditing(null); setShowForm(true); }}
               size="sm"
@@ -183,48 +183,48 @@ export default function CustomersPage() {
       )}
 
       {!loading && !err && filteredCustomers.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-[#dfd8c8] bg-[#ffffff] shadow-[0_10px_30px_-15px_rgba(24,38,21,0.08),0_1px_3px_rgba(24,38,21,0.04)]">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/70 text-[11px] font-bold tracking-wider text-slate-500 uppercase">
-                  <th className="px-4 py-3.5">{t("customers.table_company")}</th>
-                  <th className="px-4 py-3.5">{t("customers.table_industry")}</th>
-                  <th className="px-4 py-3.5">{t("customers.table_stage")}</th>
-                  <th className="px-4 py-3.5">{t("customers.table_status")}</th>
-                  <th className="px-4 py-3.5">{t("customers.table_revenue")}</th>
-                  <th className="px-4 py-3.5">{t("customers.table_banks")}</th>
-                  <th className="px-4 py-3.5 text-right">{t("customers.table_actions")}</th>
+                <tr className="border-b border-[#eee8db] bg-[#faf8f3]/80 text-[11px] font-mono font-bold tracking-wider text-[#576750] uppercase">
+                  <th className="px-5 py-4">{t("customers.table_company")}</th>
+                  <th className="px-4 py-4">{t("customers.table_industry")}</th>
+                  <th className="px-4 py-4">{t("customers.table_stage")}</th>
+                  <th className="px-4 py-4">{t("customers.table_status")}</th>
+                  <th className="px-4 py-4">{t("customers.table_revenue")}</th>
+                  <th className="px-4 py-4">{t("customers.table_banks")}</th>
+                  <th className="px-5 py-4 text-right">{t("customers.table_actions")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[#eee8db]">
                 {filteredCustomers.map((c) => (
-                  <tr key={c.id} className="transition-colors hover:bg-slate-50/80">
-                    <td className="px-4 py-3.5">
+                  <tr key={c.id} className="transition-colors hover:bg-[#faf8f3]/90">
+                    <td className="px-5 py-4">
                       <Link
                         href={`/customers/${c.id}`}
-                        className="font-bold text-slate-900 hover:text-blue-600 hover:underline block"
+                        className="font-serif font-bold text-base text-[#182615] hover:text-[#265e2b] hover:underline block leading-tight"
                       >
                         {c.company_name}
                       </Link>
                     </td>
-                    <td className="px-4 py-3.5 text-xs text-slate-600">
+                    <td className="px-4 py-4 text-xs text-[#41503b]">
                       {c.industry ?? t("common.empty_dash")}
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-4">
                       <Badge value={c.stage} />
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-4">
                       <Badge value={c.status} />
                     </td>
-                    <td className="px-4 py-3.5 text-xs font-mono text-slate-700">
+                    <td className="px-4 py-4 text-xs font-mono text-[#182615]">
                       {c.revenue_reported != null ? formatCurrency(c.revenue_reported) : t("common.empty_dash")}
                     </td>
-                    <td className="px-4 py-3.5 text-xs text-slate-600">
+                    <td className="px-4 py-4 text-xs text-[#576750]">
                       {(c.current_banks ?? []).length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {(c.current_banks ?? []).map((b) => (
-                            <span key={b} className="rounded bg-slate-100 border border-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-700">
+                            <span key={b} className="rounded-full bg-[#f2efe6] border border-[#d4ccb8] px-2 py-0.5 text-[10px] font-medium text-[#4a5944]">
                               {b}
                             </span>
                           ))}
@@ -233,23 +233,23 @@ export default function CustomersPage() {
                         t("common.empty_dash")
                       )}
                     </td>
-                    <td className="px-4 py-3.5 text-right">
+                    <td className="px-5 py-4 text-right">
                       <div className="flex justify-end items-center gap-1.5">
                         <Link
                           href={`/customers/${c.id}`}
-                          className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition"
+                          className="rounded-full border border-[#dfd8c8] bg-[#ffffff] px-3 py-1 text-xs font-semibold text-[#2d3e29] shadow-2xs hover:bg-[#f5f1e8] hover:border-[#bcc6b1] transition"
                         >
                           {t("common.open")}
                         </Link>
                         <button
                           onClick={() => { setEditing(c); setShowForm(true); }}
-                          className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition"
+                          className="rounded-full border border-[#dfd8c8] bg-[#ffffff] px-3 py-1 text-xs font-semibold text-[#2d3e29] shadow-2xs hover:bg-[#f5f1e8] hover:border-[#bcc6b1] transition"
                         >
                           {t("common.edit")}
                         </button>
                         <button
                           onClick={() => onDelete(c.id, c.company_name)}
-                          className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-red-600 shadow-2xs hover:bg-red-50 hover:border-red-200 transition"
+                          className="rounded-full border border-[#dfd8c8] bg-[#ffffff] px-3 py-1 text-xs font-semibold text-[#a13d28] shadow-2xs hover:bg-[#faedea] hover:border-[#f0c7be] transition"
                         >
                           {t("common.delete")}
                         </button>

@@ -2,7 +2,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Customer } from "@/lib/api-client";
-import { PIPELINE_STAGES, type PipelineStage } from "@/lib/pipeline-stages";
+import { PIPELINE_STAGES } from "@/lib/pipeline-stages";
 import { timeInStage } from "@/lib/board-state";
 import { Badge } from "@/components/ui/Badge";
 import { useI18n } from "@/lib/i18n";
@@ -36,34 +36,34 @@ export function PipelineCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group relative rounded-lg border border-slate-200/90 bg-white p-3.5 text-left shadow-2xs transition-all duration-150 ${
-        pending ? "opacity-60 pointer-events-none" : "hover:border-slate-300 hover:shadow-xs"
-      } ${isOverlay ? "shadow-lg rotate-[0.8deg] border-blue-400 bg-white" : ""} focus-within:ring-2 focus-within:ring-blue-600/20`}
+      className={`group relative rounded-xl border border-[#dfd8c8] bg-[#ffffff] p-4 text-left shadow-2xs transition-all duration-200 ${
+        pending ? "opacity-60 pointer-events-none" : "hover:border-[#bcc6b1] hover:shadow-[0_8px_20px_-10px_rgba(24,38,21,0.1)]"
+      } ${isOverlay ? "shadow-xl rotate-[1.2deg] border-[#265e2b] bg-[#ffffff]" : ""} focus-within:ring-2 focus-within:ring-[#265e2b]/20`}
       role="article"
       aria-label={`${customer.company_name}, ${localizedCurrentStage}`}
     >
       {pending && (
         <span
-          className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 px-2 py-0.5 text-[10px] font-bold text-amber-900"
+          className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-[#fdf5e6] border border-[#f2dcba] px-2.5 py-0.5 text-[10px] font-mono font-bold text-[#965a12]"
           aria-live="polite"
         >
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />{" "}
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#b8731d]" />{" "}
           {t("pipeline.transition_in_progress")}
         </span>
       )}
 
       <div className="flex items-start justify-between gap-2">
         <a href={`/customers/${customer.id}`} className="min-w-0 flex-1">
-          <div className="pr-6 text-sm font-bold text-slate-900 leading-tight line-clamp-2 hover:text-blue-600 hover:underline">
+          <div className="pr-6 text-sm font-serif font-bold text-[#182615] leading-snug line-clamp-2 hover:text-[#265e2b] hover:underline">
             {customer.company_name}
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-            {customer.industry && <span>{customer.industry}</span>}
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-[#576750]">
+            {customer.industry && <span className="font-medium text-[#41503b]">{customer.industry}</span>}
             <Badge value={customer.stage} />
           </div>
 
           {(customer.credit_need_amount != null || customer.credit_need_type) && (
-            <div className="mt-1.5 text-xs font-semibold text-slate-700">
+            <div className="mt-2 text-xs font-semibold text-[#182615] font-serif">
               {[
                 customer.credit_need_type,
                 customer.credit_need_amount != null ? formatCurrency(customer.credit_need_amount) : null,
@@ -73,7 +73,7 @@ export function PipelineCard({
             </div>
           )}
 
-          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
+          <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-[#7d8c76] font-mono">
             <span>{timeInStage(customer)} in stage</span>
             <span aria-hidden="true">·</span>
             <span className="truncate">{customer.status}</span>
@@ -83,7 +83,7 @@ export function PipelineCard({
         <button
           type="button"
           aria-label={`Drag ${customer.company_name}`}
-          className="shrink-0 rounded border border-slate-200 bg-slate-50 px-1.5 py-1 text-[11px] text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:opacity-50 cursor-grab active:cursor-grabbing"
+          className="shrink-0 rounded-lg border border-[#dfd8c8] bg-[#f7f4ed] px-2 py-1 text-[11px] text-[#576750] hover:bg-[#eee8db] hover:text-[#182615] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#265e2b] disabled:opacity-50 cursor-grab active:cursor-grabbing font-mono"
           {...attributes}
           {...listeners}
           disabled={pending}
@@ -92,7 +92,7 @@ export function PipelineCard({
         </button>
       </div>
 
-      <div className="mt-2.5 flex items-center gap-1 pt-2 border-t border-slate-100">
+      <div className="mt-3 flex items-center gap-1 pt-2.5 border-t border-[#eee8db]">
         <label className="sr-only" htmlFor={`move-${customer.id}`}>
           {t("pipeline.move_to")}
         </label>
@@ -108,7 +108,7 @@ export function PipelineCard({
             }
           }}
           disabled={pending}
-          className="h-7 w-full rounded border border-slate-200 bg-slate-50/70 px-2 text-[11px] font-semibold text-slate-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 disabled:opacity-50"
+          className="h-7 w-full rounded-lg border border-[#dfd8c8] bg-[#f7f4ed]/80 px-2.5 text-[11px] font-semibold text-[#2d3e29] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#265e2b] disabled:opacity-50"
         >
           <option value="">{t("pipeline.move_to")}</option>
           {PIPELINE_STAGES.map((s) => (
