@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { listCustomers, type Customer, deleteCustomer } from "@/lib/api-client";
 import { Badge } from "@/components/ui/Badge";
@@ -18,7 +18,7 @@ export default function CustomersPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true); setErr(null);
     try {
       const data = await listCustomers({ stage: stage || undefined, industry: industry || undefined });
@@ -27,8 +27,9 @@ export default function CustomersPage() {
       const msg = e instanceof Error ? e.message : (e as { error?: string })?.error ?? "Failed to load";
       setErr(msg);
     } finally { setLoading(false); }
-  }
-  useEffect(() => { load(); }, [stage, industry]);
+  }, [stage, industry]);
+
+  useEffect(() => { load(); }, [load]);
 
   async function onDelete(id: string) {
     if (!confirm("Delete this customer? This will cascade to contacts/notes/tasks. This cannot be undone.")) return;
