@@ -502,6 +502,26 @@ npm run typecheck         # tsc --noEmit (P-4)
 - Auto-deploy to Vercel on `push main` + preview URL per PR
 - Backup: ≥ confirm Supabase PITR status; cron `pg_dump` is next Backlog step if overloaded this cycle
 
+---
+
+## Portfolio Risk Digest — Feature Architecture & Audit Matrix
+
+### Overview
+Bridges Module 4 (Dashboard) and Module 5 (Credit Analysis). Aggregates active credit-risk red flags across the RM's customer portfolio into a high-visibility hero widget on `app/dashboard/page.tsx`, eliminating the need to inspect customer profiles individually.
+
+### Audit Matrix
+
+| # | Concern / Requirement | Implementation | Severity | Verification |
+|---|---|---|---|---|
+| 1 | Mixed Severity Prioritization | Pure `buildRiskDigest`: `SEVERITY_RANK` (`high` > `medium` > `low`). `worst_severity` resolves to highest priority flag. | P0 | `__tests__/dashboard.test.ts` (Case a) |
+| 2 | Lost Customer Exclusion | Customers with `status === 'lost'` are excluded from the digest even if unresolved flags exist. | P0 | `__tests__/dashboard.test.ts` (Case b) |
+| 3 | Timestamp Tie-breaking | Deterministic ordering: `worst_severity` → `latest_flag_at` desc → `company_name` asc. | P1 | `__tests__/dashboard.test.ts` (Case c) |
+| 4 | Partial Failure Isolation | `Promise.allSettled` runs 6 bounded queries. Red flag query failure degrades to `risk_digest: []` + error payload without crashing other 4 widgets. | P0 | `scripts/qa/test_phase_a_auditor.ts` |
+| 5 | Single Bounded Query | Bounded parallel query (`red_flags` limit 300, `customers` limit 500) within `GET /api/dashboard/summary`. Zero N+1 requests. | P0 | `app/api/dashboard/summary/route.ts` |
+| 6 | Bilingual i18n Coverage | Complete Vietnamese (`vi.ts`) and English (`en.ts`) translations with positive empty-state wording. | P1 | `scripts/qa/test_phase_b_auditor.ts` |
+| 7 | Direct Click-through & Badges | Each row links to `/customers/[id]`, displays `<Badge value={stage} />`, `<Badge value={worst_severity} />`, flag count pill, and truncated latest flag description. | P1 | `__tests__/risk-digest-widget.test.tsx` |
+| 8 | End-to-End Lifecycle | Creation of distressed financial statement immediately reflects in digest; clearing flags removes entry. | P0 | `scripts/qa/test_portfolio_risk_digest_e2e.ts` |
+
 **Still Backlog (unchanged from original §7):** OCR PDF read, AI next-action, multi-user, push notification, PDF export, ratio benchmark by industry.
 
 ---
@@ -533,7 +553,20 @@ npm run typecheck         # tsc --noEmit (P-4)
 - [x] Domain section — `hoangspresent.vercel.app` default; optional custom domain via `vercel domains add` (with DNS note)
 - [x] Secrets — `.env.example` placeholders only; sensitive tracking warning (§13.3 2026 incident)
 - [x] Backup — documented that Free tier has **no PITR**; cron `pg_dump` deferred to Backlog if cycle overloaded (spec §15)
-- [x] Monitoring — `GET /api/health` + Vercel Analytics
+### Portfolio Risk Digest (M4 Extension)
+
+- [x] Data layer types: `RiskSeverity = "low" | "medium" | "high"` and `RiskDigestRow` defined in `lib/dashboard.ts`.
+- [x] Pure functions `buildRiskDigest` and `sortRiskDigest` with `SEVERITY_RANK` (high > medium > low).
+- [x] Customers with `status === 'lost'` strictly excluded.
+- [x] Customers with zero flags omitted from output.
+- [x] Stable deterministic tie-breaking on identical timestamps.
+- [x] Single bounded parallel query in `app/api/dashboard/summary/route.ts` (limit 300 red flags).
+- [x] Zero N+1 roundtrips; partial failure isolation via `Promise.allSettled`.
+- [x] Front-end `<WidgetCard>` prominently placed as top widget on `app/dashboard/page.tsx`.
+- [x] Full bilingual localization in `lib/i18n/locales/vi.ts` and `en.ts` + typed keys in `types.ts`.
+- [x] Direct profile click-through (`/customers/[id]`) with `<Badge value={stage} />` and `<Badge value={worst_severity} />`.
+- [x] Unit test suite in `__tests__/dashboard.test.ts` (7 new test cases) + `__tests__/risk-digest-widget.test.tsx`.
+- [x] End-to-end integration verified: insert distress flags → appears in digest → clear flags → removed from digest (`scripts/qa/test_portfolio_risk_digest_e2e.ts`).
 
 ---
 
