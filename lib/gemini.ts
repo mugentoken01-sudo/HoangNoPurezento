@@ -2,7 +2,7 @@
 // Handles BYOK or system key pool, timeout, retry, sanitization is done by caller.
 // No key, prompt, or unmasked content is ever logged.
 
-const GEMINI_MODEL = "gemini-1.5-flash";
+export const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 const GEMINI_TIMEOUT_MS = 8000;
 const GEMINI_RETRIES = 1;
 
