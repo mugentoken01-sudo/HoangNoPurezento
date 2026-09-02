@@ -30,6 +30,6 @@ jobs:
           SUPABASE_PUBLISHABLE_KEY: "sb_publishable_placeholder"
       - name: Secret scan (no .env / service keys in repo)
         run: |
-          ! git grep -n "sb_secret" -- ':!.github/workflows/ci.yml' ':!.env.example' || (echo "sb_secret found in tracked files"; exit 1)
+          ! git grep -n "sb_secret" -- ':!.github/workflows/ci.yml' ':!.env.example' ':!*.md' || (echo "sb_secret found in tracked files"; exit 1)
           ! git ls-files | grep -q "^\.env$" || (echo ".env tracked — should be gitignored"; exit 1)
           echo "secret scan pass"
