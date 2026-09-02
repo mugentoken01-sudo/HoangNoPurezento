@@ -57,6 +57,7 @@ export default function DashboardPage() {
   const followErrors = data?.errors?.filter(e => e.widget.startsWith("follow")) ?? [];
   const todayErrors = data?.errors?.filter(e => e.widget.startsWith("today")) ?? [];
   const pendingErrors = data?.errors?.filter(e => e.widget.startsWith("pending")) ?? [];
+  const riskErrors = data?.errors?.filter(e => e.widget === "risk_digest") ?? [];
 
   const onThresholdChange = (v: string) => {
     if (v === "custom") return;
@@ -154,8 +155,79 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* 4 Operations Widgets Grid */}
+      {/* Operations Widgets Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
+        {/* Widget 0: Portfolio Risk Digest */}
+        <div className="lg:col-span-2">
+          <WidgetCard
+            title={t("dashboard.risk_digest_title")}
+            count={data?.risk_digest.length}
+            loading={loading && !data}
+            error={riskErrors[0]?.message ?? null}
+            onRetry={() => fetchSummary(threshold)}
+            stale={stale}
+            empty={!!data && data.risk_digest.length === 0}
+          >
+            {!data ? null : data.risk_digest.length === 0 ? (
+              <p className="text-xs leading-relaxed text-[#576750]">
+                {t("dashboard.risk_digest_empty")}
+              </p>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs text-[#576750]">
+                  {t("dashboard.risk_digest_showing")}
+                </p>
+                <ul className="space-y-3">
+                  {data.risk_digest.map((r) => (
+                    <li
+                      key={r.customer_id}
+                      className="rounded-xl border border-[#dfd8c8] bg-[#ffffff] p-4 transition-all hover:border-[#bcc6b1] hover:shadow-sm"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Link
+                            href={`/customers/${r.customer_id}`}
+                            className="font-serif font-bold text-sm text-[#182615] hover:text-[#265e2b] hover:underline"
+                          >
+                            {r.company_name}
+                          </Link>
+                          <Badge value={r.stage} />
+                          <Badge value={r.worst_severity} />
+                          <span className="inline-flex items-center rounded-full border border-[#f0c7be] bg-[#faedea] px-2.5 py-0.5 text-[11px] font-mono font-bold text-[#a13d28]">
+                            {t("dashboard.risk_digest_flags_count", { count: r.flag_count })}
+                          </span>
+                        </div>
+                        <Link
+                          href={`/customers/${r.customer_id}`}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-[#265e2b] hover:underline font-mono"
+                        >
+                          {t("dashboard.risk_digest_view_profile")}
+                        </Link>
+                      </div>
+                      <div className="mt-2.5 flex items-start gap-1.5 text-xs text-[#576750] bg-[#faf8f3] rounded-lg p-2.5 border border-[#eee8db]">
+                        <span className="font-semibold text-[#182615] shrink-0">
+                          {t("dashboard.risk_digest_latest_flag")}
+                        </span>
+                        <span className="font-mono text-[#a13d28] font-medium shrink-0">
+                          [{r.latest_rule_triggered}]
+                        </span>
+                        <span className="truncate" title={r.latest_description}>
+                          {r.latest_description}
+                        </span>
+                        {r.latest_flag_at && (
+                          <span className="ml-auto text-[11px] text-[#7d8c76] font-mono shrink-0">
+                            {formatDateTime(r.latest_flag_at)}
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </WidgetCard>
+        </div>
+
         {/* Widget 1: Follow-up today */}
         <WidgetCard
           title={t("dashboard.follow_ups_title")}

@@ -99,6 +99,12 @@ export interface TranslationDictionary {
     pipeline_footnote: string;
     pending_customers_title: string;
     pending_customers_empty: string;
+    risk_digest_title: string;
+    risk_digest_empty: string;
+    risk_digest_showing: string;
+    risk_digest_flags_count: string;
+    risk_digest_latest_flag: string;
+    risk_digest_view_profile: string;
     due_today: string;
     overdue: string;
     partial_data_warning: string;
