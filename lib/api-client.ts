@@ -13,8 +13,11 @@ async function handle401(status: number) {
 function getByokHeader(): Record<string, string> {
   if (typeof window === "undefined") return {};
   try {
-    const k = localStorage.getItem("rm_custom_gemini_key")?.trim();
-    if (k) return { "x-custom-gemini-key": k };
+    const rawMulti = localStorage.getItem("rm_custom_gemini_keys")?.trim();
+    const rawSingle = localStorage.getItem("rm_custom_gemini_key")?.trim();
+    const combined = [rawMulti, rawSingle].filter(Boolean).join("\n");
+    const keys = Array.from(new Set(combined.split(/[\r\n,;]+/).map((s) => s.trim()).filter(Boolean)));
+    if (keys.length > 0) return { "x-custom-gemini-key": keys.join(",") };
   } catch {}
   return {};
 }

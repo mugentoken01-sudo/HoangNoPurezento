@@ -1,5 +1,31 @@
 import { describe, it, expect } from "vitest";
 
+describe("AI multi-key pool parsing & failover topology", () => {
+  it("parses and deduplicates keys from newlines, commas, and semicolons", async () => {
+    const { parseKeyList } = await import("@/lib/gemini");
+    const raw = "AIzaSyKey1\nAIzaSyKey2, AIzaSyKey3 ; AIzaSyKey1\n\nAIzaSyKey4 ";
+    const keys = parseKeyList(raw);
+    expect(keys).toEqual(["AIzaSyKey1", "AIzaSyKey2", "AIzaSyKey3", "AIzaSyKey4"]);
+    expect(keys.length).toBe(4);
+  });
+
+  it("handles unlimited keys gracefully", async () => {
+    const { parseKeyList } = await import("@/lib/gemini");
+    const generated = Array.from({ length: 50 }, (_, i) => `AIzaKey_${i}`);
+    const raw = generated.join("\n");
+    const parsed = parseKeyList(raw);
+    expect(parsed.length).toBe(50);
+  });
+
+  it("empty/null inputs return empty array", async () => {
+    const { parseKeyList } = await import("@/lib/gemini");
+    expect(parseKeyList("")).toEqual([]);
+    expect(parseKeyList(null)).toEqual([]);
+    expect(parseKeyList(undefined)).toEqual([]);
+    expect(parseKeyList("   \n\n  ")).toEqual([]);
+  });
+});
+
 describe("AI routing precedence — BYOK > system > heuristic", () => {
   it("BYOK bypasses system cap entirely", () => {
     const byok = "AIza-test";

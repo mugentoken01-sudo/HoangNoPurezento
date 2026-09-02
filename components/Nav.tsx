@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
-import { ApiKeyModal, getCustomGeminiKey } from "@/components/settings/ApiKeyModal";
+import { ApiKeyModal, getCustomGeminiKeys } from "@/components/settings/ApiKeyModal";
 
 export function Nav() {
   const pathname = usePathname();
@@ -13,11 +13,11 @@ export function Nav() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
-  const [hasApiKey, setHasApiKey] = useState(false);
+  const [keyCount, setKeyCount] = useState(0);
 
   useEffect(() => {
     function updateKeyStatus() {
-      setHasApiKey(Boolean(getCustomGeminiKey()));
+      setKeyCount(getCustomGeminiKeys().length);
     }
     updateKeyStatus();
     window.addEventListener("gemini-key-updated", updateKeyStatus);
@@ -107,15 +107,15 @@ export function Nav() {
           type="button"
           onClick={() => setApiKeyModalOpen(true)}
           className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold shadow-2xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#265e2b] ${
-            hasApiKey
+            keyCount > 0
               ? "border-[#c0dec0] bg-[#edf5ed] text-[#1b4e20] hover:bg-[#e2efe2]"
               : "border-[#dfd8c8] bg-[#ffffff] text-[#576750] hover:bg-[#f5f1e8]"
           }`}
-          title="Cấu hình Google Gemini AI Key / Configure AI Key"
+          title="Cấu hình Google Gemini AI Key Pool / Configure Key Pool"
         >
-          <span aria-hidden="true">{hasApiKey ? "🟢" : "🔑"}</span>
-          <span>AI Key</span>
-          {hasApiKey && <span className="text-[10px] font-mono text-[#265e2b] font-bold">BYOK</span>}
+          <span aria-hidden="true">{keyCount > 0 ? "🟢" : "🔑"}</span>
+          <span>{keyCount > 1 ? `AI Pool (${keyCount})` : "AI Key"}</span>
+          {keyCount === 1 && <span className="text-[10px] font-mono text-[#265e2b] font-bold">BYOK</span>}
         </button>
 
         <button
@@ -152,14 +152,14 @@ export function Nav() {
           type="button"
           onClick={() => setApiKeyModalOpen(true)}
           className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold shadow-2xs ${
-            hasApiKey
+            keyCount > 0
               ? "border-[#c0dec0] bg-[#edf5ed] text-[#1b4e20]"
               : "border-[#dfd8c8] bg-[#ffffff] text-[#576750]"
           }`}
-          aria-label="Cấu hình AI Key"
+          aria-label="Cấu hình AI Key Pool"
         >
-          <span aria-hidden="true">🔑</span>
-          <span className="text-[10px] font-bold">{hasApiKey ? "BYOK" : "Key"}</span>
+          <span aria-hidden="true">{keyCount > 0 ? "🟢" : "🔑"}</span>
+          <span className="text-[10px] font-bold">{keyCount > 1 ? `${keyCount}K` : keyCount === 1 ? "BYOK" : "Key"}</span>
         </button>
 
         <button
@@ -218,11 +218,11 @@ export function Nav() {
               className="w-full flex items-center justify-between rounded-xl border border-[#dfd8c8] bg-[#ffffff] px-4 py-3 text-sm font-semibold text-[#182615] hover:bg-[#eee8db] transition"
             >
               <span className="flex items-center gap-2">
-                <span>🔑</span>
-                <span>{lang === "vi" ? "Cấu hình Gemini AI Key" : "Configure Gemini AI Key"}</span>
+                <span>{keyCount > 0 ? "🟢" : "🔑"}</span>
+                <span>{lang === "vi" ? "Cấu hình Gemini Key Pool" : "Configure Gemini Key Pool"}</span>
               </span>
               <span className="text-xs font-mono text-[#265e2b] font-bold">
-                {hasApiKey ? "BYOK (Active)" : "None"}
+                {keyCount > 1 ? `${keyCount} Keys Active` : keyCount === 1 ? "1 Key BYOK" : "None"}
               </span>
             </button>
 

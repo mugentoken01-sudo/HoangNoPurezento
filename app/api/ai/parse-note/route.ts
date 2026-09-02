@@ -56,28 +56,40 @@ export async function POST(req: Request) {
   const sanitized = sanitizeForPrompt(content, { companyName });
   const prompt = buildParsePrompt(sanitized, todayStr);
 
-  // ---- Key precedence: BYOK → system (capped) → heuristic
-  const byok = req.headers.get("x-custom-gemini-key")?.trim() || req.headers.get("x-custom-gemini-key".toLowerCase())?.trim() || "";
+  // ---- Key precedence: BYOK pool → system pool (capped) → heuristic
+  const rawByokHeader = req.headers.get("x-custom-gemini-key")?.trim() || req.headers.get("x-custom-gemini-key".toLowerCase())?.trim() || "";
+  const byokKeys = (await import("@/lib/gemini")).parseKeyList(rawByokHeader);
 
-  // 1) BYOK — no rate limit, log metadata only (no key)
-  if (byok) {
+  // 1) BYOK pool — rotates through all user-provided keys, no rate limit, log metadata only (no key)
+  if (byokKeys.length > 0) {
     try {
-      const text = await callGemini(prompt, byok);
+      const { text, keyIndex, totalKeys } = await callGeminiWithPool(prompt, byokKeys);
       const parsed = tryParseJson(text);
       if (parsed) {
         // Validate shape
         const t = ["call","meeting","email"].includes(parsed.next_action_type as string) ? parsed.next_action_type : null;
         const d = parsed.next_action_date && /^\d{4}-\d{2}-\d{2}$/.test(parsed.next_action_date) ? parsed.next_action_date : null;
-        return json({ next_action_type: t, next_action_date: d, confidence: (parsed.confidence as string) || "medium", source: "gemini_byok" });
+        return json({
+          next_action_type: t,
+          next_action_date: d,
+          confidence: (parsed.confidence as string) || "medium",
+          source: "gemini_byok",
+          key_index: keyIndex,
+          keys_in_pool: totalKeys,
+        });
       }
-      // Gemini returned non-JSON → fallback to heuristic
     } catch (e) {
-      // BYOK failure → fallback to heuristic (don't try system if BYOK was explicit)
+      // BYOK failure across all keys → fallback to heuristic
       const h = parseNoteHeuristic(content, todayStr);
-      return json({ ...h, source: "heuristic", fallback_reason: e instanceof Error ? e.message.slice(0,200) : String(e).slice(0,200) });
+      return json({
+        ...h,
+        source: "heuristic",
+        fallback_reason: e instanceof Error ? e.message.slice(0, 200) : String(e).slice(0, 200),
+        keys_in_pool: byokKeys.length,
+      });
     }
     const h = parseNoteHeuristic(content, todayStr);
-    return json({ ...h, source: "heuristic", fallback_reason: "gemini_byok_bad_json" });
+    return json({ ...h, source: "heuristic", fallback_reason: "gemini_byok_bad_json", keys_in_pool: byokKeys.length });
   }
 
   // 2) System pool — capped 10/day, atomic

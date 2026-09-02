@@ -130,15 +130,27 @@ export async function POST(req: Request) {
     prevPeriod,
   });
 
-  const byok = req.headers.get("x-custom-gemini-key")?.trim() || "";
+  const rawByokHeader = req.headers.get("x-custom-gemini-key")?.trim() || "";
+  const byokKeys = (await import("@/lib/gemini")).parseKeyList(rawByokHeader);
 
-  // 1) BYOK — no cap
-  if (byok) {
+  // 1) BYOK pool — no cap, rotates through all user-provided keys
+  if (byokKeys.length > 0) {
     try {
-      const text = await callGemini(prompt, byok);
-      return json({ draft: text.trim(), source: "gemini_byok", sanitized_company: sanitizedCompany });
+      const { text, keyIndex, totalKeys } = await callGeminiWithPool(prompt, byokKeys);
+      return json({
+        draft: text.trim(),
+        source: "gemini_byok",
+        sanitized_company: sanitizedCompany,
+        key_index: keyIndex,
+        keys_in_pool: totalKeys,
+      });
     } catch (e) {
-      return json({ draft: heuristicText, source: "heuristic", fallback_reason: e instanceof Error ? e.message.slice(0, 200) : String(e).slice(0, 200) });
+      return json({
+        draft: heuristicText,
+        source: "heuristic",
+        fallback_reason: e instanceof Error ? e.message.slice(0, 200) : String(e).slice(0, 200),
+        keys_in_pool: byokKeys.length,
+      });
     }
   }
 

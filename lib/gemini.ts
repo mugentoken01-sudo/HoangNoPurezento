@@ -57,28 +57,41 @@ export async function callGemini(prompt: string, apiKey: string): Promise<string
   throw new Error(lastErr ?? "Gemini call failed");
 }
 
+// Helper to parse multiple keys from env string, header, or user input
+// Supports newline, comma, semicolon delimiters, trims whitespace and deduplicates.
+export function parseKeyList(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  const parts = raw.split(/[\r\n,;]+/).map((s) => s.trim()).filter(Boolean);
+  return Array.from(new Set(parts));
+}
+
 // Pool of system keys — redundancy-only (same project → no extra quota) unless keys are from distinct projects.
-// Env: GEMINI_API_KEY (single) or GEMINI_API_KEYS (comma-separated). Trim empty.
+// Env: GEMINI_API_KEY (single) or GEMINI_API_KEYS (comma/newline-separated). Trim empty.
 export function getSystemKeys(): string[] {
   const single = process.env.GEMINI_API_KEY?.trim();
   const pool = process.env.GEMINI_API_KEYS?.trim();
-  const keys: string[] = [];
-  if (pool) keys.push(...pool.split(",").map(s => s.trim()).filter(Boolean));
-  if (single && !keys.includes(single)) keys.push(single);
-  return keys;
+  const rawJoined = [pool, single].filter(Boolean).join(",");
+  return parseKeyList(rawJoined);
 }
 
-export async function callGeminiWithPool(prompt: string, keys: string[]): Promise<{ text: string; keyIndex: number }> {
+export async function callGeminiWithPool(
+  prompt: string,
+  keys: string[]
+): Promise<{ text: string; keyIndex: number; totalKeys: number }> {
+  if (!keys || keys.length === 0) {
+    throw new Error("No Gemini API keys provided in pool");
+  }
   let lastErr: Error | null = null;
   for (let i = 0; i < keys.length; i++) {
     try {
       const text = await callGemini(prompt, keys[i]);
-      return { text, keyIndex: i };
+      return { text, keyIndex: i, totalKeys: keys.length };
     } catch (e: unknown) {
       lastErr = e instanceof Error ? e : new Error(String(e));
-      // Try next key on 429 / 5xx / timeout
+      // Log failover without exposing secrets
+      console.warn(`[gemini-pool] Key #${i + 1}/${keys.length} failed (${lastErr.message.slice(0, 100)}). Swapping to next key...`);
       continue;
     }
   }
-  throw lastErr ?? new Error("All system keys failed");
+  throw lastErr ?? new Error(`All ${keys.length} Gemini API keys in pool failed`);
 }
