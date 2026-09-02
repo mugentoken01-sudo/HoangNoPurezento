@@ -2,56 +2,119 @@
 import { mergeFeed } from "@/lib/feed";
 import type { Note, Task, PipelineHistory } from "@/lib/api-client";
 import { Badge } from "@/components/ui/Badge";
+import { useI18n } from "@/lib/i18n";
 
-function fmt(iso: string) {
-  try { return new Date(iso).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" }); } catch { return iso; }
-}
-
-export function ActivityFeed({ notes, tasks, history }: { notes: Note[]; tasks: Task[]; history: PipelineHistory[] }) {
+export function ActivityFeed({
+  notes,
+  tasks,
+  history,
+}: {
+  notes: Note[];
+  tasks: Task[];
+  history: PipelineHistory[];
+}) {
+  const { t, formatDateTime, formatDate, dict } = useI18n();
   const items = mergeFeed(notes, tasks, history);
-  if (items.length === 0) return <p className="text-sm text-zinc-500">No activity yet — add a note, create a task, or change stage to see the timeline.</p>;
+
+  if (items.length === 0) {
+    return (
+      <p className="text-xs text-slate-500 py-4 text-center">
+        {t("customer_detail.feed_empty")}
+      </p>
+    );
+  }
 
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-2.5">
       {items.map((it) => {
         if (it.kind === "note") {
           const n = it.data as Note;
           return (
-            <li key={`note-${n.id}`} className="rounded-lg border bg-white px-3 py-2.5">
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-violet-100 border border-violet-200 px-2 py-0.5 text-[11px] font-medium text-violet-700">Note</span>
-                <span className="text-xs text-zinc-400">{fmt(n.created_at)}</span>
+            <li
+              key={`note-${n.id}`}
+              className="rounded-lg border border-slate-200/90 bg-white p-3.5 shadow-2xs transition-colors"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 uppercase">
+                  {t("common.notes")}
+                </span>
+                <span className="text-xs text-slate-400 font-mono">
+                  {formatDateTime(n.created_at)}
+                </span>
                 {n.next_action_type && <Badge value={n.next_action_type} />}
-                {n.next_action_date && <span className="text-xs text-amber-700">→ {n.next_action_date}</span>}
+                {n.next_action_date && (
+                  <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                    → {formatDate(n.next_action_date)}
+                  </span>
+                )}
               </div>
-              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed">{n.content}</p>
+              <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-slate-800">
+                {n.content}
+              </p>
             </li>
           );
         }
+
         if (it.kind === "task") {
-          const t = it.data as Task;
+          const tk = it.data as Task;
           return (
-            <li key={`task-${t.id}`} className="flex gap-2 rounded-lg border bg-white px-3 py-2.5">
-              <span className={`mt-0.5 h-4 w-4 shrink-0 rounded border flex items-center justify-center text-[10px] ${t.status === "done" ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white"}`}>
-                {t.status === "done" ? "✓" : ""}
+            <li
+              key={`task-${tk.id}`}
+              className="flex gap-2.5 rounded-lg border border-slate-200/90 bg-white p-3.5 shadow-2xs"
+            >
+              <span
+                className={`mt-0.5 h-4 w-4 shrink-0 rounded border flex items-center justify-center text-[10px] font-bold ${
+                  tk.status === "done"
+                    ? "bg-emerald-600 border-emerald-600 text-white"
+                    : "border-slate-300 bg-white"
+                }`}
+              >
+                {tk.status === "done" ? "✓" : ""}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={`text-sm ${t.status === "done" ? "line-through text-zinc-400" : ""}`}>{t.title}</span>
-                  <Badge value={t.source} label={t.source === "auto_template" ? "auto" : "manual"} />
-                  <Badge value={t.status} />
+                  <span
+                    className={`text-xs font-semibold ${
+                      tk.status === "done" ? "line-through text-slate-400" : "text-slate-900"
+                    }`}
+                  >
+                    {tk.title}
+                  </span>
+                  <Badge
+                    value={tk.source}
+                    label={tk.source === "auto_template" ? "Auto" : "Manual"}
+                    showDot={false}
+                  />
+                  <Badge value={tk.status} />
                 </div>
-                <div className="text-xs text-zinc-400">{fmt(t.created_at)}{t.due_date ? ` · due ${t.due_date}` : ""}</div>
+                <div className="mt-1 text-[11px] text-slate-400 font-mono">
+                  {formatDateTime(tk.created_at)}
+                  {tk.due_date ? ` · Hạn: ${formatDate(tk.due_date)}` : ""}
+                </div>
               </div>
             </li>
           );
         }
+
         const h = it.data as PipelineHistory;
+        const fromName = h.from_stage ? dict.stages[h.from_stage] ?? h.from_stage : "Khởi tạo";
+        const toName = dict.stages[h.to_stage] ?? h.to_stage;
+
         return (
-          <li key={`stage-${h.id}`} className="rounded-lg border border-dashed bg-zinc-50 px-3 py-2">
-            <span className="text-xs font-medium text-zinc-600">Stage changed</span>{" "}
-            <span className="text-xs text-zinc-500">{h.from_stage ?? "∅"} → <strong className="text-zinc-700">{h.to_stage}</strong></span>
-            <span className="ml-2 text-xs text-zinc-400">{fmt(h.changed_at)}</span>
+          <li
+            key={`stage-${h.id}`}
+            className="rounded-lg border border-slate-200 border-dashed bg-slate-50/70 px-3.5 py-2.5 text-xs text-slate-600"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-1">
+              <div>
+                <span className="font-semibold text-slate-700">Chuyển giai đoạn:</span>{" "}
+                <span className="font-mono text-slate-500">{fromName}</span> →{" "}
+                <strong className="text-slate-900 font-semibold">{toName}</strong>
+              </div>
+              <span className="text-[11px] text-slate-400 font-mono">
+                {formatDateTime(h.changed_at)}
+              </span>
+            </div>
           </li>
         );
       })}

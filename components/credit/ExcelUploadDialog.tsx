@@ -2,14 +2,34 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { useI18n } from "@/lib/i18n";
 
-// Lightweight xlsx import — only loaded when dialog opens (code-split via dynamic import)
 type ParsedRow = Record<string, string | number | null> & { period: string };
 
 const REQUIRED_COL = "period";
-const ALLOWED_COLS = ["period","revenue","cogs","net_income","ebit","ebitda","interest_expense","total_assets","total_liabilities","total_equity","current_assets","current_liabilities","inventory","receivables","payables","cfo","total_debt","cash"];
+const ALLOWED_COLS = [
+  "period",
+  "revenue",
+  "cogs",
+  "net_income",
+  "ebit",
+  "ebitda",
+  "interest_expense",
+  "total_assets",
+  "total_liabilities",
+  "total_equity",
+  "current_assets",
+  "current_liabilities",
+  "inventory",
+  "receivables",
+  "payables",
+  "cfo",
+  "total_debt",
+  "cash",
+];
 
 export function ExcelUploadDialog({ onPrefill }: { onPrefill: (row: ParsedRow) => void }) {
+  const { t, formatNumber } = useI18n();
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [err, setErr] = useState<string | null>(null);
@@ -18,19 +38,24 @@ export function ExcelUploadDialog({ onPrefill }: { onPrefill: (row: ParsedRow) =
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setErr(null); setLoading(true); setRows([]);
+    setErr(null);
+    setLoading(true);
+    setRows([]);
     try {
       const XLSX = await import("xlsx");
       const buf = await file.arrayBuffer();
       const wb = XLSX.read(buf, { type: "array" });
       const sheet = wb.Sheets[wb.SheetNames[0]];
-      if (!sheet) throw new Error("No sheet found");
+      if (!sheet) throw new Error("No sheet found in workbook");
       const json: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: null });
       if (!json.length) throw new Error("Sheet is empty");
-      // Validate header: must have period
-      const headers = Object.keys(json[0] ?? {}).map(h => String(h).trim().toLowerCase());
-      if (!headers.includes(REQUIRED_COL)) throw new Error(`Missing required column "${REQUIRED_COL}". Headers found: ${headers.join(", ")}`);
-      const parsed: ParsedRow[] = json.map(r => {
+
+      const headers = Object.keys(json[0] ?? {}).map((h) => String(h).trim().toLowerCase());
+      if (!headers.includes(REQUIRED_COL)) {
+        throw new Error(`Missing required column "${REQUIRED_COL}". Headers found: ${headers.join(", ")}`);
+      }
+
+      const parsed: ParsedRow[] = json.map((r) => {
         const lower: Record<string, unknown> = {};
         for (const [k, v] of Object.entries(r)) lower[String(k).trim().toLowerCase()] = v;
         const period = String(lower[REQUIRED_COL] ?? "").trim();
@@ -42,7 +67,7 @@ export function ExcelUploadDialog({ onPrefill }: { onPrefill: (row: ParsedRow) =
           if (v == null || v === "") out[col] = null;
           else {
             const n = typeof v === "number" ? v : Number(String(v).replace(/,/g, ""));
-            if (!Number.isFinite(n)) throw new Error(`Column "${col}" has non-numeric value "${v}" (row period=${period})`);
+            if (!Number.isFinite(n)) throw new Error(`Column "${col}" has non-numeric value "${v}" (period=${period})`);
             out[col] = Math.trunc(n);
           }
         }
@@ -53,47 +78,88 @@ export function ExcelUploadDialog({ onPrefill }: { onPrefill: (row: ParsedRow) =
       setErr(ex instanceof Error ? ex.message : String(ex));
     } finally {
       setLoading(false);
-      // reset input so same file can be re-selected
       e.target.value = "";
     }
   }
 
   return (
     <>
-      <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>Upload Excel</Button>
+      <Button variant="secondary" size="sm" onClick={() => setOpen(true)} className="text-xs h-8">
+        {t("credit.upload_excel")}
+      </Button>
+
       {open && (
-        <Modal open onClose={() => { setOpen(false); setRows([]); setErr(null); }} title="Upload Excel — BCTC template">
+        <Modal
+          open
+          onClose={() => {
+            setOpen(false);
+            setRows([]);
+            setErr(null);
+          }}
+          title={t("credit.excel_dialog_title")}
+        >
           <div className="space-y-4">
-            <p className="text-xs text-zinc-500">
-              1 sheet, header row = field names (<code className="rounded bg-zinc-100 px-1">{ALLOWED_COLS.join(", ")}</code>). Each row is one period.
-              File is parsed locally and <strong>prefills the form for review</strong> — nothing is inserted until you confirm.
+            <p className="text-xs text-slate-500 leading-relaxed">
+              {t("credit.excel_dialog_desc")}
             </p>
-            <label className="flex flex-col gap-2">
-              <span className="text-xs font-medium">Choose .xlsx file</span>
-              <input type="file" accept=".xlsx,.xls" onChange={onFile} className="text-sm" />
+
+            <label className="flex flex-col gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50/50 p-4 text-center cursor-pointer hover:border-slate-400 transition">
+              <span className="text-xs font-semibold text-slate-700">
+                📁 {t("credit.excel_choose_file")}
+              </span>
+              <input type="file" accept=".xlsx,.xls" onChange={onFile} className="text-xs mx-auto" />
             </label>
-            {loading && <p className="text-xs text-zinc-500">Parsing…</p>}
-            {err && <p className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">{err}</p>}
+
+            {loading && (
+              <p className="text-xs font-medium text-slate-500 text-center animate-pulse">
+                {t("common.loading")}
+              </p>
+            )}
+
+            {err && (
+              <p className="rounded-md bg-red-50 border border-red-200 p-2.5 text-xs text-red-700 font-medium">
+                {err}
+              </p>
+            )}
+
             {rows.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs font-medium">{rows.length} row(s) parsed — click to prefill form:</p>
-                <div className="max-h-64 overflow-auto rounded-lg border">
+              <div className="space-y-2.5 pt-2">
+                <p className="text-xs font-semibold text-slate-800">
+                  {t("credit.excel_upload_success", { count: rows.length })}
+                </p>
+                <div className="max-h-60 overflow-auto rounded-lg border border-slate-200/90">
                   <table className="w-full text-xs">
-                    <thead className="sticky top-0 bg-zinc-50">
-                      <tr><th className="px-2 py-1 text-left border-b">Period</th><th className="px-2 py-1 text-left border-b">Revenue</th><th className="px-2 py-1 text-left border-b">Action</th></tr>
+                    <thead className="sticky top-0 bg-slate-50 border-b border-slate-200">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-bold text-slate-600">{t("credit.period")}</th>
+                        <th className="px-3 py-2 text-right font-bold text-slate-600">{t("credit.revenue")}</th>
+                        <th className="px-3 py-2 text-right font-bold text-slate-600">{t("common.actions")}</th>
+                      </tr>
                     </thead>
-                    <tbody>
-                      {rows.map(r => (
-                        <tr key={r.period} className="border-b last:border-0 hover:bg-zinc-50">
-                          <td className="px-2 py-1 font-mono">{r.period}</td>
-                          <td className="px-2 py-1">{r.revenue ?? "—"}</td>
-                          <td className="px-2 py-1"><Button size="sm" onClick={() => { onPrefill(r); setOpen(false); }}>Prefill</Button></td>
+                    <tbody className="divide-y divide-slate-100">
+                      {rows.map((r) => (
+                        <tr key={r.period} className="hover:bg-slate-50/80">
+                          <td className="px-3 py-2 font-mono font-bold text-slate-900">{r.period}</td>
+                          <td className="px-3 py-2 text-right tabular-nums text-slate-700">
+                            {r.revenue != null ? formatNumber(typeof r.revenue === "number" ? r.revenue : Number(r.revenue)) : t("common.empty_dash")}
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                onPrefill(r);
+                                setOpen(false);
+                              }}
+                              className="h-7 text-xs"
+                            >
+                              Nhập form
+                            </Button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                <p className="text-[11px] text-zinc-400">Template order doesn’t matter — columns are matched by name. Missing optional columns → null.</p>
               </div>
             )}
           </div>

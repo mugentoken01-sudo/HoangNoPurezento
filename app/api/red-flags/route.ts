@@ -11,8 +11,12 @@ export async function GET(req: Request) {
     const { data: owner } = await supabase.from("customers").select("id").eq("id", customerId).maybeSingle();
     if (!owner) return json({ data: [] });
   }
+  const period = url.searchParams.get("period");
+  const fsId = url.searchParams.get("financial_statement_id");
   let q = supabase.from("red_flags").select("*").order("created_at", { ascending: false });
   if (customerId) q = q.eq("customer_id", customerId);
+  if (period) q = q.eq("period", period);
+  if (fsId) q = q.eq("financial_statement_id", fsId);
   const { data, error: dbErr } = await q;
   if (dbErr) return error(dbErr.message, 500);
   return json({ data });

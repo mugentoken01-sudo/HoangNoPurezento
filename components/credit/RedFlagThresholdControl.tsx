@@ -2,17 +2,31 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FormField, Input } from "@/components/ui/FormField";
-import { loadThresholds, saveThresholds, normalizeThresholds, DEFAULT_THRESHOLDS, type RedFlagThresholds } from "@/lib/red-flag-thresholds";
+import {
+  loadThresholds,
+  saveThresholds,
+  normalizeThresholds,
+  DEFAULT_THRESHOLDS,
+  type RedFlagThresholds,
+} from "@/lib/red-flag-thresholds";
+import { useI18n } from "@/lib/i18n";
 
-export function RedFlagThresholdControl({ onChanged }: { onChanged?: (t: RedFlagThresholds) => void }) {
+export function RedFlagThresholdControl({
+  onChanged,
+}: {
+  onChanged?: (t: RedFlagThresholds) => void;
+}) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [v, setV] = useState<RedFlagThresholds>(DEFAULT_THRESHOLDS);
 
-  useEffect(() => { setV(loadThresholds()); }, []);
+  useEffect(() => {
+    setV(loadThresholds());
+  }, []);
 
   function set<K extends keyof RedFlagThresholds>(key: K, raw: string) {
     const n = Number(raw);
-    setV(prev => ({ ...prev, [key]: Number.isFinite(n) ? n : prev[key] }));
+    setV((prev) => ({ ...prev, [key]: Number.isFinite(n) ? n : prev[key] }));
   }
 
   function save() {
@@ -22,6 +36,7 @@ export function RedFlagThresholdControl({ onChanged }: { onChanged?: (t: RedFlag
     onChanged?.(normalized);
     setOpen(false);
   }
+
   function reset() {
     saveThresholds(DEFAULT_THRESHOLDS);
     setV(DEFAULT_THRESHOLDS);
@@ -29,37 +44,79 @@ export function RedFlagThresholdControl({ onChanged }: { onChanged?: (t: RedFlag
   }
 
   return (
-    <div className="rounded-lg border bg-white">
+    <div className="rounded-xl border border-slate-200/90 bg-white shadow-2xs overflow-hidden">
       <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium hover:bg-zinc-50"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-slate-800 hover:bg-slate-50 transition"
       >
-        <span>Red-flag thresholds <span className="font-normal text-zinc-500">— RM chỉnh được như pending threshold</span></span>
-        <span className="text-xs text-zinc-400">{open ? "▴" : "▾"}</span>
+        <div className="flex items-center gap-2">
+          <span>⚙️ {t("credit.thresholds_title")}</span>
+          <span className="font-normal text-slate-400 hidden sm:inline">
+            — {t("credit.thresholds_desc")}
+          </span>
+        </div>
+        <span className="text-xs text-slate-400 font-mono">{open ? "▲" : "▼"}</span>
       </button>
+
       {open && (
-        <div className="border-t px-3 py-3 space-y-3">
-          <p className="text-xs text-zinc-500">Điều chỉnh ngưỡng rule engine — lưu ở trình duyệt (localStorage), gửi kèm khi tạo/sửa BCTC để server tính lại flag với ngưỡng mới. Mặc định giống spec gốc.</p>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Debt × revenue" hint="debt_growth > revenue × X (mặc định 1.5)">
-              <Input type="number" step={0.1} value={String(v.debtGrowthMultiplier)} onChange={e => set("debtGrowthMultiplier", e.target.value)} />
+        <div className="border-t border-slate-100 bg-slate-50/40 p-4 space-y-4">
+          <p className="text-xs text-slate-500 leading-relaxed">
+            {t("credit.thresholds_desc")}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <FormField label={t("credit.threshold_debt_growth")}>
+              <Input
+                type="number"
+                step={0.1}
+                value={String(v.debtGrowthMultiplier)}
+                onChange={(e) => set("debtGrowthMultiplier", e.target.value)}
+                className="bg-white font-mono text-xs"
+              />
             </FormField>
-            <FormField label="Interest coverage <" hint="coverage < X (mặc định 2)">
-              <Input type="number" step={0.1} value={String(v.interestCoverageLow)} onChange={e => set("interestCoverageLow", e.target.value)} />
+            <FormField label={t("credit.threshold_ic_low")}>
+              <Input
+                type="number"
+                step={0.1}
+                value={String(v.interestCoverageLow)}
+                onChange={(e) => set("interestCoverageLow", e.target.value)}
+                className="bg-white font-mono text-xs"
+              />
             </FormField>
-            <FormField label="Current ratio critical <" hint="high nếu < X (mặc định 1)">
-              <Input type="number" step={0.1} value={String(v.currentRatioCritical)} onChange={e => set("currentRatioCritical", e.target.value)} />
+            <FormField label={t("credit.threshold_cr_critical")}>
+              <Input
+                type="number"
+                step={0.1}
+                value={String(v.currentRatioCritical)}
+                onChange={(e) => set("currentRatioCritical", e.target.value)}
+                className="bg-white font-mono text-xs"
+              />
             </FormField>
-            <FormField label="Current ratio low <" hint="medium nếu < X (mặc định 1.2)">
-              <Input type="number" step={0.1} value={String(v.currentRatioLow)} onChange={e => set("currentRatioLow", e.target.value)} />
+            <FormField label={t("credit.threshold_cr_low")}>
+              <Input
+                type="number"
+                step={0.1}
+                value={String(v.currentRatioLow)}
+                onChange={(e) => set("currentRatioLow", e.target.value)}
+                className="bg-white font-mono text-xs"
+              />
             </FormField>
-            <FormField label="Receivable spike >" hint="tăng > X (0.30 = 30%)">
-              <Input type="number" step={0.05} value={String(v.receivableSpike)} onChange={e => set("receivableSpike", e.target.value)} />
+            <FormField label={t("credit.threshold_receivable_spike")}>
+              <Input
+                type="number"
+                step={0.05}
+                value={String(v.receivableSpike)}
+                onChange={(e) => set("receivableSpike", e.target.value)}
+                className="bg-white font-mono text-xs"
+              />
             </FormField>
           </div>
-          <div className="flex gap-2">
-            <Button size="sm" onClick={save}>Save</Button>
-            <Button size="sm" variant="secondary" onClick={reset}>Reset defaults</Button>
+          <div className="flex gap-2 pt-1">
+            <Button size="sm" onClick={save} className="text-xs font-semibold">
+              {t("credit.threshold_save")}
+            </Button>
+            <Button size="sm" variant="secondary" onClick={reset} className="text-xs">
+              {t("credit.threshold_reset")}
+            </Button>
           </div>
         </div>
       )}

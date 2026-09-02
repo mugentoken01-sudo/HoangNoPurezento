@@ -3,14 +3,16 @@ import { useState } from "react";
 import { createCustomer, updateCustomer, type Customer } from "@/lib/api-client";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { FormField, Input, Textarea, Select } from "@/components/ui/FormField";
+import { FormField, Input, Select } from "@/components/ui/FormField";
+import { useI18n } from "@/lib/i18n";
+import { PIPELINE_STAGES } from "@/lib/pipeline-stages";
 
-const STAGES = ["lead","contacted","qualified","meeting","credit","approved","disbursed"] as const;
-const STATUSES = ["active","lost","won"] as const;
+const STATUSES = ["active", "inactive", "lost", "won"] as const;
 
 type Props = { initial: Customer | null; onClose: () => void; onSaved: () => void };
 
 export function CustomerForm({ initial, onClose, onSaved }: Props) {
+  const { t, dict } = useI18n();
   const isEdit = !!initial;
   const [company_name, setCompany] = useState(initial?.company_name ?? "");
   const [industry, setIndustry] = useState(initial?.industry ?? "");
@@ -23,14 +25,18 @@ export function CustomerForm({ initial, onClose, onSaved }: Props) {
   const [status, setStatus] = useState(initial?.status ?? "active");
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [fieldErrs, setFieldErrs] = useState<Record<string,string>>({});
+  const [fieldErrs, setFieldErrs] = useState<Record<string, string>>({});
 
   function validate(): boolean {
-    const e: Record<string,string> = {};
-    if (!company_name.trim()) e.company_name = "Company name is required";
+    const e: Record<string, string> = {};
+    if (!company_name.trim()) e.company_name = t("customers.form_company_name") + " is required";
     if (company_name.length > 255) e.company_name = "Max 255 chars";
-    if (revenue_reported && (!/^\d+$/.test(revenue_reported) || Number(revenue_reported) < 0)) e.revenue_reported = "Must be a non-negative integer";
-    if (credit_need_amount && (!/^\d+$/.test(credit_need_amount) || Number(credit_need_amount) < 0)) e.credit_need_amount = "Must be a non-negative integer";
+    if (revenue_reported && (!/^\d+$/.test(revenue_reported) || Number(revenue_reported) < 0)) {
+      e.revenue_reported = "Must be a non-negative integer";
+    }
+    if (credit_need_amount && (!/^\d+$/.test(credit_need_amount) || Number(credit_need_amount) < 0)) {
+      e.credit_need_amount = "Must be a non-negative integer";
+    }
     setFieldErrs(e);
     return Object.keys(e).length === 0;
   }
@@ -38,8 +44,9 @@ export function CustomerForm({ initial, onClose, onSaved }: Props) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
-    setSubmitting(true); setErr(null);
-    const banks = banksInput.split(",").map(s=>s.trim()).filter(Boolean);
+    setSubmitting(true);
+    setErr(null);
+    const banks = banksInput.split(",").map((s) => s.trim()).filter(Boolean);
     const body: Record<string, unknown> = {
       company_name: company_name.trim(),
       industry: industry.trim() || null,
@@ -53,73 +60,139 @@ export function CustomerForm({ initial, onClose, onSaved }: Props) {
     };
     try {
       if (isEdit) {
-        // stage via PATCH is blocked — so omit stage on edit, use StageControl instead
+        // stage via generic PATCH is blocked — omit stage on edit
         const { stage: _s, ...patchBody } = body;
         const res = await updateCustomer(initial!.id, patchBody);
         if (!res.ok) throw new Error((res.json as { error?: string }).error ?? "Update failed");
       } else {
         const res = await createCustomer(body);
-        if (!res.ok) throw new Error((res.json as { error?: string }).error ?? JSON.stringify((res.json as { details?: unknown }).details ?? res.json));
+        if (!res.ok) throw new Error((res.json as { error?: string }).error ?? "Create failed");
       }
       onSaved();
     } catch (ex: unknown) {
       const msg = ex instanceof Error ? ex.message : (ex as { error?: string })?.error ?? "Save failed";
       setErr(msg);
-    } finally { setSubmitting(false); }
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
-    <Modal open onClose={onClose} title={isEdit ? "Edit customer" : "New customer"}>
+    <Modal
+      open
+      onClose={onClose}
+      title={isEdit ? t("customers.modal_edit_title") : t("customers.modal_create_title")}
+    >
       <form onSubmit={onSubmit} className="space-y-4">
-        <FormField label="Company name" required error={fieldErrs.company_name}>
-          <Input value={company_name} onChange={e=>setCompany(e.target.value)} placeholder="Công ty ABC" />
+        <FormField label={t("customers.form_company_name")} required error={fieldErrs.company_name}>
+          <Input
+            value={company_name}
+            onChange={(e) => setCompany(e.target.value)}
+            placeholder={t("customers.form_company_name_placeholder")}
+          />
         </FormField>
-        <div className="grid grid-cols-2 gap-3">
-          <FormField label="Industry">
-            <Input value={industry} onChange={e=>setIndustry(e.target.value)} placeholder="Phân phối" />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField label={t("customers.form_industry")}>
+            <Input
+              value={industry}
+              onChange={(e) => setIndustry(e.target.value)}
+              placeholder={t("customers.form_industry_placeholder")}
+            />
           </FormField>
-          <FormField label="Revenue reported (VND)" hint="e.g. 80000000000" error={fieldErrs.revenue_reported}>
-            <Input value={revenue_reported} onChange={e=>setRevenue(e.target.value)} placeholder="80000000000" inputMode="numeric" />
+          <FormField label={t("customers.form_revenue")} error={fieldErrs.revenue_reported}>
+            <Input
+              value={revenue_reported}
+              onChange={(e) => setRevenue(e.target.value)}
+              placeholder={t("customers.form_revenue_placeholder")}
+              inputMode="numeric"
+            />
           </FormField>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <FormField label="Credit need type">
-            <Input value={credit_need_type} onChange={e=>setNeedType(e.target.value)} placeholder="VLĐ" />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField label={t("customers.form_credit_type")}>
+            <Input
+              value={credit_need_type}
+              onChange={(e) => setNeedType(e.target.value)}
+              placeholder="VLĐ / DA / Bảo lãnh"
+            />
           </FormField>
-          <FormField label="Credit need amount (VND)" error={fieldErrs.credit_need_amount}>
-            <Input value={credit_need_amount} onChange={e=>setNeedAmount(e.target.value)} placeholder="5000000000" inputMode="numeric" />
+          <FormField label={t("customers.form_credit_amount")} error={fieldErrs.credit_need_amount}>
+            <Input
+              value={credit_need_amount}
+              onChange={(e) => setNeedAmount(e.target.value)}
+              placeholder="10000000000"
+              inputMode="numeric"
+            />
           </FormField>
         </div>
-        <FormField label="Credit need purpose">
-          <Input value={credit_need_purpose} onChange={e=>setNeedPurpose(e.target.value)} placeholder="Bổ sung vốn lưu động" />
+
+        <FormField label={t("customers.form_credit_purpose")}>
+          <Input
+            value={credit_need_purpose}
+            onChange={(e) => setNeedPurpose(e.target.value)}
+            placeholder={t("customers.form_credit_purpose_placeholder")}
+          />
         </FormField>
-        <FormField label="Current banks" hint="Comma-separated — rendered as chips">
-          <Input value={banksInput} onChange={e=>setBanksInput(e.target.value)} placeholder="BIDV, Vietcombank" />
+
+        <FormField label={t("customers.form_banks")} hint={t("customers.form_banks_hint")}>
+          <Input
+            value={banksInput}
+            onChange={(e) => setBanksInput(e.target.value)}
+            placeholder="Vietcombank, BIDV, MBBank"
+          />
           {banksInput.trim() && (
-            <div className="mt-1.5 flex flex-wrap gap-1">
-              {banksInput.split(",").map(s=>s.trim()).filter(Boolean).map(b=>(
-                <span key={b} className="rounded-full bg-zinc-100 border px-2 py-0.5 text-xs">{b}</span>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {banksInput.split(",").map((s) => s.trim()).filter(Boolean).map((b) => (
+                <span
+                  key={b}
+                  className="rounded-full bg-slate-100 border border-slate-200 px-2.5 py-0.5 text-xs font-medium text-slate-700"
+                >
+                  {b}
+                </span>
               ))}
             </div>
           )}
         </FormField>
-        <div className="grid grid-cols-2 gap-3">
-          <FormField label="Stage">
-            <Select value={stage} onChange={e=>setStage(e.target.value)} disabled={isEdit} >
-              {STAGES.map(s=><option key={s} value={s}>{s}</option>)}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField label={t("customers.form_status")}>
+            <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+              {STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {s === "active" ? t("customers.form_status_active") : s === "inactive" ? t("customers.form_status_inactive") : s}
+                </option>
+              ))}
             </Select>
-            {isEdit && <span className="text-xs text-zinc-400">Change stage via the Stage control on the profile page (Module 3 will replace it with Kanban).</span>}
           </FormField>
-          <FormField label="Status">
-            <Select value={status} onChange={e=>setStatus(e.target.value)}>
-              {STATUSES.map(s=><option key={s} value={s}>{s}</option>)}
-            </Select>
-          </FormField>
+
+          {!isEdit && (
+            <FormField label={t("customers.filter_stage")}>
+              <Select value={stage} onChange={(e) => setStage(e.target.value)}>
+                {PIPELINE_STAGES.map((s) => (
+                  <option key={s} value={s}>
+                    {dict.stages[s] ?? s}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
+          )}
         </div>
-        {err && <p className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">{err}</p>}
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={submitting}>{submitting ? "Saving…" : isEdit ? "Save" : "Create"}</Button>
+
+        {err && (
+          <p className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-xs font-medium text-red-700">
+            {err}
+          </p>
+        )}
+
+        <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            {t("common.cancel")}
+          </Button>
+          <Button type="submit" disabled={submitting}>
+            {submitting ? t("common.saving") : isEdit ? t("common.save") : t("common.create")}
+          </Button>
         </div>
       </form>
     </Modal>
