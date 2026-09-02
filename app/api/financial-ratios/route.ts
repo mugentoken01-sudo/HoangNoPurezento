@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { json, error, requireUser } from "@/lib/api-helpers";
 export async function GET(req: Request) {
   const { user, supabase, error: authErr } = await requireUser();

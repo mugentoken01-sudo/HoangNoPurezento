@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { json, error, requireUser, zodError } from "@/lib/api-helpers";
 import { fsUpdateSchema } from "@/lib/validations";
 import { computeRatios, evaluateRedFlags } from "@/lib/ratios";

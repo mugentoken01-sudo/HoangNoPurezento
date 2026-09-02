@@ -1,0 +1,48 @@
+const fs = require('fs');
+
+const authHelper = [
+  'import { createClient } from "@supabase/supabase-js";',
+  '',
+  'try { (process as any).loadEnvFile?.(".env.local"); } catch {}',
+  '',
+  'const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";',
+  'const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? "";',
+  'const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY ?? "";',
+  '',
+  'export const adminClient = createClient(url, serviceKey, { auth: { persistSession: false } });',
+  '',
+  'export interface UserSession {',
+  '  userId: string;',
+  '  email: string;',
+  '  cookieHeader: string;',
+  '}',
+  '',
+  'export async function getSession(email: string, password: string): Promise<UserSession> {',
+  '  const client = createClient(url, anonKey, { auth: { persistSession: false } });',
+  '  const { data, error } = await client.auth.signInWithPassword({ email, password });',
+  '  if (error || !data.session) throw new Error("Login failed for " + email + ": " + error?.message);',
+  '  const projectRef = "sidpaiftgcwocelqmicp";',
+  '  const cookieName = "sb-" + projectRef + "-auth-token";',
+  '  const sessionStr = JSON.stringify(data.session);',
+  '  const cookieHeader = cookieName + "=" + encodeURIComponent(sessionStr) + "; " + cookieName + ".0=" + encodeURIComponent(data.session.access_token) + "; " + cookieName + ".1=" + encodeURIComponent(data.session.refresh_token);',
+  '  return { userId: data.user.id, email, cookieHeader };',
+  '}',
+  '',
+  'export async function ensureUserB(): Promise<{ email: string; password: string }> {',
+  '  const email = "qa-user-b@example.com";',
+  '  const password = "UserBPass123!";',
+  '  try {',
+  '    await adminClient.auth.admin.createUser({ email, password, email_confirm: true });',
+  '  } catch (e) {',
+  '    const { data: listed } = await adminClient.auth.admin.listUsers();',
+  '    const found = listed?.users?.find(u => u.email === email);',
+  '    if (found) {',
+  '      await adminClient.auth.admin.updateUserById(found.id, { password, email_confirm: true });',
+  '    }',
+  '  }',
+  '  return { email, password };',
+  '}'
+].join('\n');
+
+fs.writeFileSync('scripts/qa/auth-helper.ts', authHelper, 'utf8');
+console.log('Written auth-helper.ts');

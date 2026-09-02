@@ -14,11 +14,14 @@ const RM_EMAIL = "rm@demo.local";
 const RM_PASSWORD = "Demo1234!";
 
 async function ensureUser(): Promise<string> {
-  const { data: created, error: createErr } = await admin.auth.admin.createUser({
-    email: RM_EMAIL, password: RM_PASSWORD, email_confirm: true,
-  });
-  if (created?.user) { console.log(`Created user ${RM_EMAIL} (${created.user.id})`); return created.user.id; }
-  if (createErr && !createErr.message.includes("already registered")) throw createErr;
+  try {
+    const { data: created } = await admin.auth.admin.createUser({
+      email: RM_EMAIL, password: RM_PASSWORD, email_confirm: true,
+    });
+    if (created?.user) { console.log(`Created user ${RM_EMAIL} (${created.user.id})`); return created.user.id; }
+  } catch (e: any) {
+    // If user exists, fall through to lookup
+  }
   const { data: listed } = await admin.auth.admin.listUsers();
   const found = listed.users.find(u => u.email === RM_EMAIL);
   if (!found) throw new Error("User not found after create attempt");

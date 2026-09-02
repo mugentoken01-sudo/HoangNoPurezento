@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { json, error, requireUser, zodError } from "@/lib/api-helpers";
 import { customerUpdateSchema } from "@/lib/validations";
 
@@ -20,7 +21,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if ("stage" in parsed.data) return error("Use POST /api/customers/[id]/stage to change stage", 400);
   const { owner_id: _o, ...payload } = parsed.data as Record<string, unknown>;
   const { data, error: dbErr } = await supabase.from("customers").update(payload).eq("id", params.id).select().single();
-  if (dbErr) return error(dbErr.message, 400);
+  if (dbErr) return error(dbErr.message, dbErr.code === "PGRST116" ? 404 : 400);
   return json({ data });
 }
 

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // RM Cockpit Module 4 — GET /api/dashboard/summary
 // Single server-side summary: owner-scoped, bounded, timezone-aware, partial-failure isolated.
 // Query: ?threshold=7  (days, 1..365, default 7)

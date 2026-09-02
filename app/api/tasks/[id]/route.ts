@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { json, error, requireUser, zodError } from "@/lib/api-helpers";
 import { taskUpdateSchema } from "@/lib/validations";
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
