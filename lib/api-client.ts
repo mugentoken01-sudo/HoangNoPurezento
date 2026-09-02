@@ -10,8 +10,17 @@ async function handle401(status: number) {
   }
 }
 
+function getByokHeader(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  try {
+    const k = localStorage.getItem("rm_custom_gemini_key")?.trim();
+    if (k) return { "x-custom-gemini-key": k };
+  } catch {}
+  return {};
+}
+
 export async function apiFetchRaw<T>(path: string, init?: RequestInit): Promise<{ ok: boolean; json: T & { error?: string; details?: unknown; history?: unknown; tasks_created?: number; ratios?: unknown; flags?: unknown; flags_created?: number; flags_updated?: number }; status: number }> {
-  const res = await fetch(path, { ...init, headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) } } as RequestInit);
+  const res = await fetch(path, { ...init, headers: { "Content-Type": "application/json", ...getByokHeader(), ...(init?.headers ?? {}) } } as RequestInit);
   const json = await res.json().catch(() => ({}));
   if (!res.ok) await handle401(res.status);
   return { ok: res.ok, json, status: res.status };
@@ -112,6 +121,41 @@ export const listRedFlags = (customer_id?: string) => apiGet<RedFlag[]>(customer
 export const createRedFlag = (body: Record<string, unknown>) => apiPost<RedFlag>("/api/red-flags", body);
 export const patchRedFlag = (id: string, body: Record<string, unknown>) => apiPatch<RedFlag>(`/api/red-flags/${id}`, body);
 export const deleteRedFlag = (id: string) => apiDelete(`/api/red-flags/${id}`);
+
+// ─── AI Assist (Module 5 Gemini BYOK) — NEVER auto-save, explicit Accept only
+export type ParseNoteAISource = "gemini_byok" | "gemini_system" | "heuristic";
+export type ParseNoteAIResult = {
+  next_action_type: "call" | "meeting" | "email" | null;
+  next_action_date: string | null;
+  confidence: "high" | "medium" | "low";
+  source: ParseNoteAISource;
+  fallback_reason?: string;
+};
+export type DraftCommentaryAIResult = {
+  draft: string;
+  source: ParseNoteAISource;
+  sanitized_company?: string;
+  fallback_reason?: string;
+};
+
+async function aiFetch<T>(path: string, body: unknown): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json", ...getByokHeader() };
+  const res = await fetch(path, { method: "POST", headers, body: JSON.stringify(body) });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    await handle401(res.status);
+    const err: ApiError = { error: (json as { error?: string }).error ?? res.statusText, details: (json as { details?: unknown }).details ?? json, status: res.status };
+    (err as unknown as { reset_at?: string }).reset_at = (json as { details?: { reset_at?: string } })?.details?.reset_at;
+    throw err;
+  }
+  return json as T;
+}
+
+export const parseNoteAI = (content: string, customer_id?: string) =>
+  aiFetch<ParseNoteAIResult>("/api/ai/parse-note", { content, customer_id });
+
+export const draftCommentaryAI = (args: { financial_statement_id?: string; customer_id?: string; period?: string }) =>
+  aiFetch<DraftCommentaryAIResult>("/api/ai/draft-commentary", args);
 
 // ─── Dashboard (Module 4) — single summary endpoint, no N+1 ──────────────
 export const getDashboardSummary = async (threshold?: number, signal?: AbortSignal): Promise<DashboardSummary> => {

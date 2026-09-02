@@ -1,46 +1,8 @@
-# RM Cockpit — Modules 1–6 (all shipped)
+# RM Cockpit — Modules 1–6 + M5 Gemini BYOK (in progress)
 
-> **M1** Data + Auth + API ✅ · **M2** Customer UI ✅ · **M3** Pipeline Kanban ✅ · **M4** Dashboard ✅ · **M5** Credit Analysis (frontend + reconciliation) ✅ · **M6** DevOps (CI/CD, hosting, domain, backup) ✅
+> **M1** Data + Auth + API ✅ · **M2** Customer UI ✅ · **M3** Pipeline Kanban ✅ · **M4** Dashboard ✅ · **M5a** Credit Analysis ✅ · **M5b** Gemini BYOK AI-assist (PII sanitized, 10/day, heuristic fallback) 🔧 in progress · **M6** DevOps ✅
 
-Source plan `RM-Cockpit-Ke-Hoach-Tong-Quan.md` (§2–§9). This doc is the **follow-on** §10–§18 — patched against a direct audit of `mugentoken01-sudo/HoangNoPurezento` (repomix snapshot), not a rewrite of the original spec. The real gap before this build: **M5 backend existed but had zero UI and 5 backend bugs; M6 had not started at all.**
-
----
-
-## Current state before M5+M6 (snapshot audit)
-
-| Module | Status | Notes |
-|---|---|---|
-| M1 Data + Auth + API | ✅ Done | 8 tables, 32 RLS policies, `owner_id` server-set |
-| M2 Customer UI | ✅ Done | Profile, Notes, Tasks, Contacts, unified feed |
-| M3 Kanban | ✅ Done (P0/P1 audited) | Atomic RPC `transition_customer_stage`, idempotent credit checklist |
-| M4 Dashboard | ✅ Done (P0/P1 audited) | `Asia/Ho_Chi_Minh`, bounded, `errors[]` isolation |
-| **M5** | 🟡 Backend only | `financial_statements`/`financial_ratios`/`red_flags` CRUD + `lib/ratios.ts` (5 rules) via API. **No UI** on `/customers/[id]`, no Excel, no chart, no flag list. `lib/api-client.ts` had none of the 8 credit functions. |
-| **M6** | 🔴 Not started | No `.github/workflows`, no `vercel.json`, not deployed, no backup, `package.json` missing `typecheck`. |
-
----
-
-## Patch audit matrix — P-1…P-5 (applied before extending M5)
-
-Convention matches M3/M4 `Phase 1 audit matrices` (`README` prior §).
-
-| # | Requirement | Before (bug) | Sev | Files | Fix |
-|---|---|---|---|---|---|
-| **P-1** | Red flag must track latest numbers | `PATCH /api/financial-statements/[id]` called `computeRatios` but **never `evaluateRedFlags`** (imported, unused) → editing BCTC updated ratios but stale rule flags stayed on the file | **P0** | `app/api/financial-statements/[id]/route.ts` | PATCH now: delete `red_flags` with `financial_statement_id=id AND source='rule_engine'`, re-`evaluateRedFlags(data, prev, ratios)`, insert with `financial_statement_id` + `source='rule_engine'`, return `flags_updated`; GET also reads by `financial_statement_id` first |
-| **P-2** | Deleting BCTC must clean its flags | `red_flags` linked only by loose `customer_id + period` text → `DELETE /api/financial-statements/[id]` left orphan flags | **P1** | `supabase/migrations/00004_credit_analysis_patch.sql`, `red_flags` | Added `financial_statement_id uuid references financial_statements(id) on delete cascade` (nullable — manual flags may have null) → DB cascade deletes, no route change needed |
-| **P-3** | Don't mix auto vs manual flags | `red_flags` had no source column → applying P-1 reconciliation could delete a hand-written RM flag | **P1** | `red_flags`, `app/api/red-flags/route.ts` | Added `source text not null default 'rule_engine' check (source in ('rule_engine','manual'))`; `POST /api/red-flags` (hand) forces `source='manual'`; reconciliation in P-1 touches only `source='rule_engine'` |
-| **P-4** | CI must gate types | `package.json` missing `typecheck` (`tsc --noEmit`) → type errors could pass CI at M6 | **P2** | `package.json` | Added `"typecheck": "tsc --noEmit"` |
-| **P-5** | Ratio engine must handle Postgres `bigint` strings | Financial columns are `bigint` — PostgREST may return **string** for large values; `lib/ratios.ts` did `as never` without coercion. `-/ * /` happen to coerce but `+` would silently concat | **P2 (hardening)** | `lib/ratios.ts` + `__tests__/ratios.test.ts` | Added `toNum`/`normalizeFS` (string → `Number`) at entry of both `computeRatios`/`evaluateRedFlags`; unit test feeds string-form rows through both functions |
-
-**Migration:** `supabase/migrations/00004_credit_analysis_patch.sql` — covers P-2+P-3, no RLS touch needed (policies already scope by `owner_id`).
-
-```sql
-alter table red_flags
-  add column if not exists financial_statement_id uuid references financial_statements(id) on delete cascade,
-  add column if not exists source text not null default 'rule_engine'
-    check (source in ('rule_engine','manual'));
-create index if not exists idx_rf_fs_id on red_flags(financial_statement_id) where financial_statement_id is not null;
-create index if not exists idx_rf_source on red_flags(source);
-```
+Source plans: `RM-Cockpit-Ke-Hoach-Tong-Quan.md` (§2–§9) + `RM-Cockpit-Module-5-6-Ke-Hoach-Va-Ban-Va.md` (§10–§18) + **M5 Gemini BYOK prompt (Modules 5)** (this build). Mocks **removed** per `/goal` (xóa vụ mock data) — see `docs/financial-statement-template.md` + `scripts/clean-mock.ts`.
 
 ---
 
@@ -49,12 +11,74 @@ create index if not exists idx_rf_source on red_flags(source);
 | Layer | Choice |
 |---|---|
 | DB | Postgres via Supabase `https://sidpaiftgcwocelqmicp.supabase.co` |
-| Auth | Supabase Auth (email/password), cookie via `middleware.ts` |
-| API | Next.js 14 API routes (`app/api/*`), Zod (`lib/validations.ts`) |
+| Auth | Supabase Auth (email/password), cookie via `middleware.ts` — `Confirm email OFF` for auto-login on Create account |
+| API | Next.js 14 API routes (`app/api/*`), Zod (`lib/validations.ts`), `export const dynamic = "force-dynamic"` on API routes |
 | Board DnD | **@dnd-kit** `core + sortable + utilities` |
-| Credit chart | **recharts** (tech stack §5 — now installed), **xlsx** (SheetJS) for Excel parse |
+| Credit chart | **recharts**, **xlsx** (SheetJS) |
+| AI Assist | Gemini 1.5 Flash via `lib/gemini.ts` (server-only) — BYOK `x-custom-gemini-key` → system pool `GEMINI_API_KEY(S)` (10/day atomic) → heuristic `lib/heuristic.ts` |
 | Dashboard | Single `GET /api/dashboard/summary` — bounded, `Asia/Ho_Chi_Minh` calendar-day semantics |
 | Tests | Vitest + jsdom + @testing-library |
+
+---
+
+## Create account — why 400 and how to fix
+
+Symptom: `sidpaiftgcwocelqmicp.supabase.co/auth/v1/token?grant_type=password: 400 Email not confirmed`.
+
+Cause: `supabase.auth.signUp` succeeded but Supabase project has **Confirm email = ON** → `data.session = null` → auto `signInWithPassword` fails with `Email not confirmed`.
+
+**Fix (one time in Supabase Dashboard):** `Authentication → Configuration → Email → Confirm email → OFF → Save`. After that `Create account` auto-redirects to `/dashboard` immediately. Code in `app/login/page.tsx` already handles both modes and reports `Your account needs email confirmation — check inbox or ask admin to disable Confirm email` when ON.
+
+---
+
+## Mock data — removed
+
+Per user `/goal` **xóa vụ mock data**: `scripts/seed.ts` and `scripts/generate-template.mjs` are deprecated placeholders (safe to `! Remove-Item` them); `docs/financial-statement-template.xlsx` is removed (was 18.7 KB 2023-2024 sample); `docs/financial-statement-template.md` explains the removal. **DB mock rows** (`customers` named `Công ty ABC` + cascaded children) are wiped via:
+
+```powershell
+! npm run clean:mock
+# or: ! npx tsx --env-file=.env.local scripts/clean-mock.ts
+```
+
+`package.json` already removed `"seed"` script; `clean:mock` is now the only mock-related script. Verification: `! npm run verify:rls` still passes after cleanup.
+
+---
+
+## Module 5b — Gemini BYOK AI-assist (this build)
+
+Allowed AI — **exactly two** use cases, enforced in code:
+1. **Parse next_action** from free-text `content` of a Note being drafted (`POST /api/ai/parse-note`).
+2. **Draft commentary** paragraph from already-computed `financial_ratios` + `red_flags` for a period (`POST /api/ai/draft-commentary`).
+
+Forbidden — **exactly three**, enforced: never computes/alters ratios, never calls `POST /api/customers/[id]/stage`, never the sole source of truth for a red flag.
+
+Key precedence per request (strict):
+1. Header `x-custom-gemini-key` present (`localStorage.rm_custom_gemini_key`) → use it, **no system cap**, metadata-only log.
+2. Else if system keys configured (`GEMINI_API_KEY` or `GEMINI_API_KEYS` comma-separated) → **atomic 10/day per `auth.uid()` in `Asia/Ho_Chi_Minh`** via `increment_ai_usage` RPC; `429 Too Many Requests` with `reset_at` (next 00:00 HCMC) when exceeded.
+3. Else or on every Gemini failure (quota/network/timeout) → **deterministic heuristic** (`lib/heuristic.ts`), never throws, always `source: "heuristic"`.
+
+PII: every outbound prompt is **masked server-side** via `lib/pii.ts:sanitizeForPrompt` (companyName → `[COMPANY]`, tax `\b\d{10}(-\d{3})?` → `[TAX_ID]`, phone → `[PHONE]`, email → `[EMAIL]`). Placeholders include `containsRawPII` helper. Unmasked values never appear in prompt logs; only metadata (timestamp, owner_id, source tier, latency) is logged.
+
+Client never calls Gemini directly or reads `GEMINI_API_KEY`; all AI goes through `/api/ai/*`.
+
+### New files (M5b)
+
+| File | Purpose |
+|---|---|
+| `supabase/migrations/00005_ai_usage_log.sql` | `ai_usage_log(owner_id, usage_date, count)` + RLS `owner_id=auth.uid()` + `increment_ai_usage(uuid,date,int)→jsonb` atomic (INSERT ON CONFLICT DO UPDATE + row lock, revert if over cap) |
+| `lib/pii.ts` | `sanitizeForPrompt(text, {companyName})`, `containsRawPII`, `PII_PLACEHOLDERS` — pure, testable |
+| `lib/heuristic.ts` | `parseNoteHeuristic(content, todayStr)` (Vietnamese: gọi lại/hẹn gặp/gửi email/ngày mai/tuần sau/dd/mm) + `draftCommentaryHeuristic(input)` template from ratios/flags — deterministic, no external call |
+| `lib/ai-rate-limit.ts` | `canConsumeSystemQuota(ownerId, cap)`, `resetAtIsoHCM()`, `todayInHCM()` — single place |
+| `lib/gemini.ts` | Server-only `callGemini` (8s timeout, 1 retry), `callGeminiWithPool` (redundancy-only pool), `getSystemKeys()` (`GEMINI_API_KEY` / `GEMINI_API_KEYS`) — honest per-project quota docs |
+| `app/api/ai/parse-note/route.ts` | BYOK → system(capped) → heuristic, PII-sanitized prompt, JSON parse with fallback |
+| `app/api/ai/draft-commentary/route.ts` | Same precedence, narrates computed ratios/flags only, `sanitized_company` in response |
+| `app/settings/page.tsx` + `components/settings/SettingsPanel.tsx` | `localStorage.rm_custom_gemini_key` + Save/Clear + precedence docs, never server-persisted |
+| `__tests__/pii.test.ts` | Masks company/tax/phone/email, formatted phone, case-insensitive, never leaks raw |
+| `__tests__/heuristic.test.ts` | Vietnamese date/action, dd/mm, ngày mốt, never throws, deterministic |
+| `__tests__/rate-limit.test.ts` | 10 allowed 11th denied, BYOK bypass, no-key→heuristic, `resetAtIsoHCM` is next 00:00 HCMC |
+| `__tests__/ai-routing.test.ts` | BYOK→system→heuristic, no stage import, PII never in masked prompt |
+
+Settings nav: `components/Nav.tsx` now includes `/settings` (Settings) in desktop + mobile drawer. Browser var `getByokHeader()` in `lib/api-client.ts` auto-attaches `x-custom-gemini-key` if present in localStorage; `parseNoteAI`/`draftCommentaryAI` use `aiFetch` (not `apiPost`). All `app/api/ai/*` handlers log metadata only — never prompt/key.
 
 ---
 
@@ -80,17 +104,18 @@ lead → contacted → qualified → meeting → credit → approved → disburs
 | `00002_rls.sql` | RLS on 8 tables — 32 policies (`owner_id = auth.uid()`, `WITH CHECK`) |
 | `00003_stage_transition_atomic.sql` | **M3 P0** — `uq_tasks_auto_template` partial unique index + `transition_customer_stage(uuid, pipeline_stage)` RPC (FOR UPDATE lock, one tx, exact `tasks_created`, `noop`) |
 | `00004_credit_analysis_patch.sql` | **M5 P-2+P-3** — `red_flags.financial_statement_id` FK cascade + `source` enum + indexes |
+| `00005_ai_usage_log.sql` | **M5b** — `ai_usage_log` + `increment_ai_usage` RPC (atomic 10/day, HCMC day) |
 
 ```bash
 supabase link --project-ref sidpaiftgcwocelqmicp
-supabase db push          # 00001 → 00004
-npm run verify:rls        # anon 0 rows on all 8 tables
-npm run seed              # Công ty ABC: lead → meeting → credit + 4 tasks
+supabase db push          # 00001 → 00005
+npm run verify:rls        # anon 0 rows on all 8+1 tables
+npm run clean:mock        # wipe mock Công ty ABC + cascaded children (replaces old seed)
 ```
 
-### RLS / Security (M1–M6)
+### RLS / Security (M1–M6 + M5b)
 
-Every table `owner_id = auth.uid()`. Verification: `scripts/verify-rls.ts`.
+Every table `owner_id = auth.uid()`. Verification: `scripts/verify-rls.ts` (+ ai_usage_log).
 
 **M3 Phase 1 audit fixes (P0/P1):**
 - `POST /api/customers/[id]/stage` → **`transition_customer_stage` RPC** — atomic, exact `tasks_created`, `noop` distinguishable.
@@ -110,11 +135,18 @@ Every table `owner_id = auth.uid()`. Verification: `scripts/verify-rls.ts`.
 - `lib/ratios.ts` hardened for Postgres `bigint`-as-string; `recharts`/`xlsx` only in `components/credit/*` (no server secret exposure).
 - CI secret scan blocks `sb_secret` leakage and `.env` tracking.
 
-Security re-audit after M5+M6: **PASS**.
+**M5b AI (new):**
+- No client import of `lib/gemini.ts` — grep `use client` files for `gemini` must be empty (enforced in `ai-routing.test.ts`).
+- BYOK header `x-custom-gemini-key` never logged or persisted; system pool `GEMINI_API_KEY(S)` server-only (`NEXT_PUBLIC_` misuse would be P0 — verified none).
+- `sanitizeForPrompt` applied to every outbound prompt without exception; test proves masked payload never contains raw PII.
+- Rate limit atomic via `increment_ai_usage` (INSERT ON CONFLICT DO UPDATE + revert if > cap) — no read-then-write race.
+- System pool is documented as **redundancy-only** unless keys are from distinct Google Cloud projects (per-project quota, not per-key).
+
+Security re-audit after M5+M6+M5b: **PASS** (re-check after AI).
 
 ---
 
-## API (M1, amended M3–M6)
+## API (M1, amended M3–M6 + M5b)
 
 | Method | Path | Notes |
 |---|---|---|
@@ -126,11 +158,13 @@ Security re-audit after M5+M6: **PASS**.
 | `GET/POST` + `GET/PATCH/DELETE` | `/api/contacts`, `/[id]` | ownership guard |
 | `GET/POST` + `GET/PATCH/DELETE` | `/api/notes`, `/[id]` | ownership guard |
 | `GET/POST` + `GET/PATCH/DELETE` | `/api/tasks`, `/[id]` | ownership guard |
-| `GET/POST` + `GET/PATCH/DELETE` | `/api/financial-statements`, `/[id]` | ownership guard · **PATCH now reconciles `source='rule_engine'` flags (P-1)** · **DELETE cascade via FK (P-2)** · **POST now sets `source='rule_engine'` on flags** |
+| `GET/POST` + `GET/PATCH/DELETE` | `/api/financial-statements`, `/[id]` | ownership guard · **PATCH reconciles `source='rule_engine'` flags (P-1)** · **DELETE cascade via FK (P-2)** |
 | `GET` | `/api/financial-ratios?customer_id=` | ownership guard |
 | `GET/POST` + `GET/PATCH/DELETE` | `/api/red-flags`, `/[id]` | **POST forces `source='manual'` (P-3)** |
 | `GET` | `/api/pipeline-history?customer_id=` | ownership guard |
 | `GET` | `/api/dashboard/summary?threshold=7` | **M4** single bounded summary |
+| `POST` | `/api/ai/parse-note` | **M5b** BYOK→system(10/day 429 + reset_at)→heuristic; `Accept` required before save; returns `{ next_action_type, next_action_date, confidence, source, fallback_reason? }` |
+| `POST` | `/api/ai/draft-commentary` | **M5b** narrates computed ratios/flags only; `{ draft, source, sanitized_company, fallback_reason? }`; 429 same |
 
 `owner_id` always server-set (`lib/api-helpers.ts:withOwner`).
 
@@ -142,14 +176,15 @@ Security re-audit after M5+M6: **PASS**.
 |---|---|
 | `/` | Overview + walkthrough |
 | `/customers` | Table, filterable by stage & industry (server query), CRUD |
-| `/customers/[id]` | Profile shell + contacts + notes + tasks + **unified feed** (`lib/feed.ts:mergeFeed`) + **Credit Analysis section** (M5 — see below) + link to pipeline |
+| `/customers/[id]` | Profile shell + contacts + notes (AI suggest) + tasks + **unified feed** (`lib/feed.ts:mergeFeed`) + **Credit Analysis section** (M5 — commentary draft) + link to pipeline |
 | `/pipeline` | **Kanban board** (M3 Workbench · Cobalt) |
 | `/dashboard` | **Operational dashboard** (M4 — 4 widgets) |
-| `/login` | Auth, `?next=` |
+| `/settings` | **AI Settings — BYOK** (M5b — `localStorage.rm_custom_gemini_key`) |
+| `/login` | Auth, `?next=` — `Confirm email OFF` for auto-login |
 
-**Key libs:** `lib/api-client.ts` (typed wrapper, `apiGet/Post/Patch/Delete/FetchRaw`, `getDashboardSummary(threshold, signal)`, 401 redirect) · now also `listFinancialStatements`, `createFinancialStatement`, `patchFinancialStatement`, `deleteFinancialStatement`, `listFinancialRatios`, `listRedFlags`, `createRedFlag`, `patchRedFlag`, `deleteRedFlag` + types `FinancialStatement`/`FinancialRatio`/`RedFlag`.
+**Key libs:** `lib/api-client.ts` (typed wrapper, `apiGet/Post/Patch/Delete/FetchRaw`, `getDashboardSummary`, 8 credit fns + 2 AI fns `parseNoteAI`/`draftCommentaryAI` with `getByokHeader()` + `aiFetch`) · `lib/feed.ts:mergeFeed` · `lib/dashboard.ts` · `lib/pii.ts:sanitizeForPrompt` · `lib/heuristic.ts:parseNoteHeuristic`/`draftCommentaryHeuristic` · `lib/ai-rate-limit.ts` · `lib/gemini.ts` (server-only).
 
-**Components:** `components/ui/*` (Badge/Card/Button/FormField/Table/Modal/Toast) · `components/customers/*` (CustomerForm chip `current_banks[]`; ContactSection single-primary; NoteSection; TaskSection status PATCH + `auto`/`manual`; ActivityFeed) · `components/pipeline/*` · `components/dashboard/WidgetCard.tsx` · `components/credit/*` (M5 — below).
+**Components:** `components/ui/*` (Badge/Card/Button/FormField/Table/Modal/Toast) · `components/customers/*` (CustomerForm; ContactSection; **NoteSection with AI suggest Accept/Discard + source badge**; TaskSection; ActivityFeed) · `components/pipeline/*` · `components/dashboard/WidgetCard.tsx` · `components/credit/*` (FinancialStatementForm/FinancialStatementTable/ExcelUploadDialog/RatioChart/RedFlagList/RedFlagThresholdControl/**CreditAnalysisSection with AI commentary draft + `RedFlagThresholdControl` RM-tunable per `lib/red-flag-thresholds.ts`**) · `components/settings/SettingsPanel.tsx`.
 
 ---
 

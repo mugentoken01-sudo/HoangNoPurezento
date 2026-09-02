@@ -136,10 +136,11 @@ export default function LoginPage() {
 
         <form onSubmit={isSignup ? onSignUp : onSignIn} className="mt-6 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#2d3e29] mb-1.5">
+            <label htmlFor="auth-email" className="block text-xs font-semibold text-[#2d3e29] mb-1.5">
               {t("auth.email_label")}
             </label>
             <input
+              id="auth-email"
               className="w-full rounded-lg border border-[#dfd8c8] bg-[#ffffff] px-3.5 py-2.5 text-sm text-[#182615] placeholder:text-[#a2ad9d] focus:border-[#265e2b] focus:outline-none focus:ring-3 focus:ring-[#265e2b]/15 transition"
               placeholder={t("auth.email_placeholder")}
               type="email"
@@ -151,10 +152,11 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#2d3e29] mb-1.5">
+            <label htmlFor="auth-password" className="block text-xs font-semibold text-[#2d3e29] mb-1.5">
               {t("auth.password_label")}
             </label>
             <input
+              id="auth-password"
               className="w-full rounded-lg border border-[#dfd8c8] bg-[#ffffff] px-3.5 py-2.5 text-sm text-[#182615] placeholder:text-[#a2ad9d] focus:border-[#265e2b] focus:outline-none focus:ring-3 focus:ring-[#265e2b]/15 transition"
               placeholder={t("auth.password_placeholder")}
               type="password"
@@ -167,7 +169,8 @@ export default function LoginPage() {
 
           {msg && (
             <div
-              className={`text-xs rounded-lg border p-3 leading-relaxed ${
+              role="alert"
+              className={`text-xs rounded-lg border p-3 leading-relaxed font-medium ${
                 msgKind === "error"
                   ? "text-[#a13d28] bg-[#faedea] border-[#f0c7be]"
                   : "text-[#1b6325] bg-[#eaf5eb] border-[#bde0c1]"
@@ -180,7 +183,7 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-10 mt-2 text-sm font-semibold"
+            className="w-full h-10 mt-2 text-sm font-semibold cursor-pointer"
           >
             {loading ? (isSignup ? t("auth.creating_account") : t("auth.signing_in")) : isSignup ? t("auth.signup_button") : t("auth.signin_button")}
           </Button>
@@ -192,7 +195,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => { setMode(isSignup ? "signin" : "signup"); setMsg(null); setMsgKind(null); }}
-              className="font-semibold text-[#265e2b] hover:text-[#1d4821] hover:underline"
+              className="font-semibold text-[#265e2b] hover:text-[#1d4821] hover:underline cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#265e2b] rounded px-1"
             >
               {isSignup ? t("auth.signin_link") : t("auth.create_link")}
             </button>

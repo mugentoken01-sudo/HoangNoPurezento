@@ -72,11 +72,11 @@ export function TaskSection({
 
   return (
     <div className="space-y-3.5">
-      <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+      <h3 className="text-sm font-serif font-bold text-[#182615] tracking-tight">
         {t("customer_detail.tasks_title")}
       </h3>
 
-      <form onSubmit={onCreate} className="flex flex-wrap items-end gap-2.5 rounded-lg border border-slate-200/80 bg-slate-50/50 p-3.5">
+      <form onSubmit={onCreate} className="flex flex-wrap items-end gap-2.5 rounded-xl border border-[#dfd8c8] bg-[#faf8f3]/80 p-4">
         <div className="flex-1 min-w-[200px]">
           <FormField label={t("customer_detail.add_task")} required>
             <Input
@@ -87,7 +87,7 @@ export function TaskSection({
             />
           </FormField>
         </div>
-        <div className="w-36">
+        <div className="w-full sm:w-36">
           <FormField label={t("customer_detail.task_due_date")}>
             <Input
               type="date"
@@ -97,27 +97,27 @@ export function TaskSection({
             />
           </FormField>
         </div>
-        <Button type="submit" size="sm" disabled={submitting} className="h-9 text-xs font-semibold">
+        <Button type="submit" size="sm" disabled={submitting} className="h-9 text-xs font-semibold cursor-pointer w-full sm:w-auto">
           {submitting ? "…" : t("common.add")}
         </Button>
       </form>
 
       {err && (
-        <p className="rounded-md bg-red-50 border border-red-200 p-2 text-xs font-medium text-red-700">
+        <p role="alert" className="rounded-xl bg-[#faedea] border border-[#f0c7be] p-3 text-xs font-semibold text-[#a13d28]">
           {err}
         </p>
       )}
 
       {tasks.length === 0 && (
-        <p className="text-xs text-slate-500 py-3">{t("customer_detail.tasks_empty")}</p>
+        <p className="text-xs text-[#576750] py-3">{t("customer_detail.tasks_empty")}</p>
       )}
 
       <ul className="space-y-2">
         {tasks.map((tk) => (
           <li
             key={tk.id}
-            className={`flex items-center justify-between gap-2.5 rounded-lg border p-3 transition-colors ${
-              tk.status === "done" ? "border-slate-200 bg-slate-50/70" : "border-slate-200/90 bg-white"
+            className={`flex items-center justify-between gap-2.5 rounded-xl border p-3.5 transition-colors ${
+              tk.status === "done" ? "border-[#dfd8c8] bg-[#faf8f3]/60" : "border-[#dfd8c8] bg-[#ffffff] shadow-2xs"
             }`}
           >
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -125,19 +125,20 @@ export function TaskSection({
                 type="button"
                 onClick={() => onStatusChange(tk, tk.status === "done" ? "todo" : "done")}
                 disabled={updatingId === tk.id}
-                className={`h-4 w-4 shrink-0 rounded border flex items-center justify-center text-[10px] font-bold transition-all ${
+                className={`h-4 w-4 shrink-0 rounded border flex items-center justify-center text-[10px] font-bold transition-all cursor-pointer ${
                   tk.status === "done"
-                    ? "bg-emerald-600 border-emerald-600 text-white"
-                    : "border-slate-300 bg-white hover:border-slate-500"
+                    ? "bg-[#265e2b] border-[#265e2b] text-[#faf8f2]"
+                    : "border-[#dfd8c8] bg-[#ffffff] hover:border-[#265e2b]"
                 }`}
                 title="Toggle status"
+                aria-label={`Toggle task status for ${tk.title}`}
               >
                 {tk.status === "done" ? "✓" : ""}
               </button>
 
               <span
                 className={`text-xs font-medium truncate ${
-                  tk.status === "done" ? "line-through text-slate-400" : "text-slate-900"
+                  tk.status === "done" ? "line-through text-[#7d8c76]" : "text-[#182615]"
                 }`}
               >
                 {tk.title}
@@ -150,7 +151,7 @@ export function TaskSection({
               />
 
               {tk.due_date && (
-                <span className="text-[11px] text-slate-500 font-mono hidden sm:inline-block">
+                <span className="text-[11px] text-[#576750] font-mono hidden sm:inline-block">
                   · {formatDate(tk.due_date)}
                 </span>
               )}
@@ -161,15 +162,17 @@ export function TaskSection({
                 value={tk.status}
                 onChange={(e) => onStatusChange(tk, e.target.value)}
                 disabled={updatingId === tk.id}
-                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 focus:border-blue-600 focus:outline-none"
+                aria-label={`Change status for ${tk.title}`}
+                className="rounded-lg border border-[#dfd8c8] bg-[#ffffff] px-2.5 py-1 text-xs font-medium text-[#182615] focus:border-[#265e2b] focus:outline-none"
               >
                 <option value="todo">Todo</option>
                 <option value="doing">Doing</option>
                 <option value="done">Done</option>
               </select>
               <button
+                type="button"
                 onClick={() => onDelete(tk)}
-                className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 hover:border-red-200 transition"
+                className="rounded-lg border border-[#dfd8c8] bg-[#ffffff] px-2.5 py-1 text-xs font-semibold text-[#a13d28] hover:bg-[#faedea] hover:border-[#f0c7be] transition cursor-pointer"
               >
                 {t("common.delete")}
               </button>

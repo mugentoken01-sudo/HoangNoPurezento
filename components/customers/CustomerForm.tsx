@@ -147,7 +147,7 @@ export function CustomerForm({ initial, onClose, onSaved }: Props) {
               {banksInput.split(",").map((s) => s.trim()).filter(Boolean).map((b) => (
                 <span
                   key={b}
-                  className="rounded-full bg-slate-100 border border-slate-200 px-2.5 py-0.5 text-xs font-medium text-slate-700"
+                  className="rounded-full bg-[#f2efe6] border border-[#d4ccb8] px-2.5 py-0.5 text-xs font-semibold text-[#4a5944] font-mono"
                 >
                   {b}
                 </span>
@@ -181,16 +181,16 @@ export function CustomerForm({ initial, onClose, onSaved }: Props) {
         </div>
 
         {err && (
-          <p className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-xs font-medium text-red-700">
+          <p role="alert" className="rounded-xl bg-[#faedea] border border-[#f0c7be] px-3.5 py-2.5 text-xs font-semibold text-[#a13d28]">
             {err}
           </p>
         )}
 
-        <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
-          <Button type="button" variant="secondary" onClick={onClose}>
+        <div className="flex justify-end gap-2.5 pt-3 border-t border-[#eee8db]">
+          <Button type="button" variant="secondary" onClick={onClose} className="cursor-pointer">
             {t("common.cancel")}
           </Button>
-          <Button type="submit" disabled={submitting}>
+          <Button type="submit" disabled={submitting} className="cursor-pointer">
             {submitting ? t("common.saving") : isEdit ? t("common.save") : t("common.create")}
           </Button>
         </div>

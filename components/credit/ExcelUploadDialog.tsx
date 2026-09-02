@@ -99,60 +99,60 @@ export function ExcelUploadDialog({ onPrefill }: { onPrefill: (row: ParsedRow) =
           title={t("credit.excel_dialog_title")}
         >
           <div className="space-y-4">
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <p className="text-xs text-[#576750] leading-relaxed">
               {t("credit.excel_dialog_desc")}
             </p>
 
-            <label className="flex flex-col gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50/50 p-4 text-center cursor-pointer hover:border-slate-400 transition">
-              <span className="text-xs font-semibold text-slate-700">
-                📁 {t("credit.excel_choose_file")}
+            <label className="flex flex-col gap-2 rounded-xl border-2 border-dashed border-[#dfd8c8] bg-[#faf8f3]/60 p-5 text-center cursor-pointer hover:border-[#265e2b] hover:bg-[#eaf5eb]/30 transition-all">
+              <span className="text-xs font-semibold text-[#182615]">
+                <span aria-hidden="true" className="mr-1">📁</span> {t("credit.excel_choose_file")}
               </span>
-              <input type="file" accept=".xlsx,.xls" onChange={onFile} className="text-xs mx-auto" />
+              <input type="file" accept=".xlsx,.xls" onChange={onFile} className="text-xs mx-auto text-[#576750]" />
             </label>
 
             {loading && (
-              <p className="text-xs font-medium text-slate-500 text-center animate-pulse">
+              <p className="text-xs font-semibold text-[#576750] text-center animate-pulse">
                 {t("common.loading")}
               </p>
             )}
 
             {err && (
-              <p className="rounded-md bg-red-50 border border-red-200 p-2.5 text-xs text-red-700 font-medium">
+              <p role="alert" className="rounded-xl bg-[#faedea] border border-[#f0c7be] p-3 text-xs text-[#a13d28] font-semibold">
                 {err}
               </p>
             )}
 
             {rows.length > 0 && (
               <div className="space-y-2.5 pt-2">
-                <p className="text-xs font-semibold text-slate-800">
+                <p className="text-xs font-bold text-[#182615]">
                   {t("credit.excel_upload_success", { count: rows.length })}
                 </p>
-                <div className="max-h-60 overflow-auto rounded-lg border border-slate-200/90">
+                <div className="max-h-60 overflow-auto rounded-xl border border-[#dfd8c8]">
                   <table className="w-full text-xs">
-                    <thead className="sticky top-0 bg-slate-50 border-b border-slate-200">
+                    <thead className="sticky top-0 bg-[#faf8f3] border-b border-[#eee8db]">
                       <tr>
-                        <th className="px-3 py-2 text-left font-bold text-slate-600">{t("credit.period")}</th>
-                        <th className="px-3 py-2 text-right font-bold text-slate-600">{t("credit.revenue")}</th>
-                        <th className="px-3 py-2 text-right font-bold text-slate-600">{t("common.actions")}</th>
+                        <th className="px-3.5 py-2.5 text-left font-mono font-bold text-[#576750] uppercase">{t("credit.period")}</th>
+                        <th className="px-3.5 py-2.5 text-right font-mono font-bold text-[#576750] uppercase">{t("credit.revenue")}</th>
+                        <th className="px-3.5 py-2.5 text-right font-mono font-bold text-[#576750] uppercase">{t("common.actions")}</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-[#eee8db]">
                       {rows.map((r) => (
-                        <tr key={r.period} className="hover:bg-slate-50/80">
-                          <td className="px-3 py-2 font-mono font-bold text-slate-900">{r.period}</td>
-                          <td className="px-3 py-2 text-right tabular-nums text-slate-700">
+                        <tr key={r.period} className="hover:bg-[#faf8f3]/80">
+                          <td className="px-3.5 py-2.5 font-mono font-bold text-[#182615]">{r.period}</td>
+                          <td className="px-3.5 py-2.5 text-right font-mono tabular-nums text-[#182615]">
                             {r.revenue != null ? formatNumber(typeof r.revenue === "number" ? r.revenue : Number(r.revenue)) : t("common.empty_dash")}
                           </td>
-                          <td className="px-3 py-2 text-right">
+                          <td className="px-3.5 py-2.5 text-right">
                             <Button
                               size="sm"
                               onClick={() => {
                                 onPrefill(r);
                                 setOpen(false);
                               }}
-                              className="h-7 text-xs"
+                              className="h-7 text-xs font-semibold cursor-pointer"
                             >
-                              Nhập form
+                              {t("credit.excel_prefill_btn")}
                             </Button>
                           </td>
                         </tr>

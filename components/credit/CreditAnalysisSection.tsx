@@ -6,9 +6,11 @@ import {
   listRedFlags,
   deleteFinancialStatement,
   createRedFlag,
+  draftCommentaryAI,
   type FinancialStatement,
   type FinancialRatio,
   type RedFlag,
+  type DraftCommentaryAIResult,
 } from "@/lib/api-client";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -21,6 +23,7 @@ import { RatioChart } from "./RatioChart";
 import { RedFlagList } from "./RedFlagList";
 import { RedFlagThresholdControl } from "./RedFlagThresholdControl";
 import { useI18n } from "@/lib/i18n";
+import { ApiKeyModal } from "@/components/settings/ApiKeyModal";
 
 export function CreditAnalysisSection({ customerId }: { customerId: string }) {
   const { t } = useI18n();
@@ -33,14 +36,20 @@ export function CreditAnalysisSection({ customerId }: { customerId: string }) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<FinancialStatement | null>(null);
   const [prefill, setPrefill] = useState<Record<string, string | number | null> | undefined>(undefined);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
 
-  // Manual Red Flag modal state
   const [showManualFlag, setShowManualFlag] = useState(false);
   const [flagPeriod, setFlagPeriod] = useState("");
   const [flagDesc, setFlagDesc] = useState("");
   const [flagSeverity, setFlagSeverity] = useState<"low" | "medium" | "high">("medium");
   const [flagSubmitting, setFlagSubmitting] = useState(false);
   const [flagErr, setFlagErr] = useState<string | null>(null);
+
+  // AI commentary state — never auto-saves ratios/flags
+  const [commentaryFsId, setCommentaryFsId] = useState<string>("");
+  const [commentary, setCommentary] = useState<DraftCommentaryAIResult | null>(null);
+  const [commentaryLoading, setCommentaryLoading] = useState(false);
+  const [commentaryErr, setCommentaryErr] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -54,13 +63,14 @@ export function CreditAnalysisSection({ customerId }: { customerId: string }) {
       setStatements(fs);
       setRatios(r as FinancialRatio[]);
       setFlags(f as RedFlag[]);
+      if (fs.length && !commentaryFsId) setCommentaryFsId(fs[0].id);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : (e as { error?: string })?.error ?? t("common.error");
       setErr(msg);
     } finally {
       setLoading(false);
     }
-  }, [customerId, t]);
+  }, [customerId, t, commentaryFsId]);
 
   useEffect(() => {
     load();
@@ -117,6 +127,36 @@ export function CreditAnalysisSection({ customerId }: { customerId: string }) {
     }
   }
 
+  async function onDraftCommentary() {
+    if (!commentaryFsId) {
+      setCommentaryErr("Chọn một kỳ BCTC trước");
+      return;
+    }
+    setCommentaryLoading(true);
+    setCommentaryErr(null);
+    setCommentary(null);
+    try {
+      const res = await draftCommentaryAI({ financial_statement_id: commentaryFsId });
+      setCommentary(res);
+    } catch (ex: unknown) {
+      const apiErr = ex as { error?: string; status?: number };
+      if (apiErr.status === 429) {
+        setCommentaryErr(apiErr.error ?? "System AI quota exceeded (10/day)");
+      } else {
+        setCommentaryErr(apiErr.error ?? "Failed to draft commentary");
+      }
+    } finally {
+      setCommentaryLoading(false);
+    }
+  }
+
+  const sourceLabel: Record<string, string> = { gemini_byok: "BYOK", gemini_system: "System AI", heuristic: "Heuristic" };
+  const sourceColor: Record<string, string> = {
+    gemini_byok: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    gemini_system: "bg-sky-50 text-sky-700 border-sky-200",
+    heuristic: "bg-zinc-100 text-zinc-600 border-zinc-200",
+  };
+
   if (loading) {
     return (
       <div className="py-10 text-center">
@@ -165,10 +205,8 @@ export function CreditAnalysisSection({ customerId }: { customerId: string }) {
         </div>
       </div>
 
-      {/* Threshold configuration slider box */}
       <RedFlagThresholdControl onChanged={load} />
 
-      {/* BCTC List */}
       <Card>
         <CardHeader>
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
@@ -180,7 +218,6 @@ export function CreditAnalysisSection({ customerId }: { customerId: string }) {
         </CardBody>
       </Card>
 
-      {/* Ratios 6 Groups Charts */}
       <Card>
         <CardHeader>
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
@@ -193,7 +230,6 @@ export function CreditAnalysisSection({ customerId }: { customerId: string }) {
         </CardBody>
       </Card>
 
-      {/* Red Flags Intelligence */}
       <Card>
         <CardHeader className="flex items-center justify-between">
           <div>
@@ -205,6 +241,72 @@ export function CreditAnalysisSection({ customerId }: { customerId: string }) {
         </CardHeader>
         <CardBody className="p-4">
           <RedFlagList flags={flags} periodFilter={periodFilter} onFilterChange={setPeriodFilter} />
+        </CardBody>
+      </Card>
+
+      {/* AI Commentary Draft — narrates ratios/flags only, never computes them */}
+      <Card>
+        <CardHeader>
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+            AI Commentary Draft
+          </h4>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Drafts a narrative paragraph from already-computed ratios/red flags. Source labeled (BYOK / System AI / Heuristic). Never alters ratios or moves pipeline.
+          </p>
+        </CardHeader>
+        <CardBody className="space-y-3">
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="flex-1 min-w-[180px]">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Kỳ BCTC</label>
+              <select
+                value={commentaryFsId}
+                onChange={(e) => setCommentaryFsId(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+              >
+                <option value="">— Chọn kỳ —</option>
+                {statements.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.period}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowApiKeyModal(true)}
+                className="inline-flex items-center gap-1 rounded-full border border-[#dfd8c8] bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-[#576750] hover:bg-[#f5f1e8] transition cursor-pointer"
+                title="Cấu hình Google Gemini API Key / Configure AI Key"
+              >
+                <span>🔑</span>
+                <span>AI Key</span>
+              </button>
+              <Button size="sm" onClick={onDraftCommentary} disabled={commentaryLoading || !commentaryFsId} className="h-9">
+                {commentaryLoading ? "…" : "✨ Draft commentary"}
+              </Button>
+            </div>
+          </div>
+
+          {commentaryErr && (
+            <p role="alert" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              {commentaryErr}
+            </p>
+          )}
+
+          {commentary && (
+            <div className="rounded-xl border bg-white p-4 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${sourceColor[commentary.source] ?? sourceColor.heuristic}`}>
+                  {sourceLabel[commentary.source] ?? commentary.source}
+                </span>
+                {commentary.fallback_reason && (
+                  <span className="text-[11px] text-zinc-400">fallback: {commentary.fallback_reason.slice(0,120)}</span>
+                )}
+              </div>
+              <p className="text-sm leading-relaxed text-slate-800 whitespace-pre-wrap">{commentary.draft}</p>
+              <p className="text-[11px] text-zinc-400">Ratios/flags are from the rule engine — AI only narrates, never recomputes. This draft is narrative text only.</p>
+            </div>
+          )}
         </CardBody>
       </Card>
 
@@ -277,6 +379,11 @@ export function CreditAnalysisSection({ customerId }: { customerId: string }) {
           </form>
         </Modal>
       )}
+
+      <ApiKeyModal
+        isOpen={showApiKeyModal}
+        onClose={() => setShowApiKeyModal(false)}
+      />
     </div>
   );
 }

@@ -126,62 +126,66 @@ export function ContactSection({
   return (
     <div className="space-y-3.5">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+        <h3 className="text-sm font-serif font-bold text-[#182615] tracking-tight">
           {t("customer_detail.contacts_title")}
         </h3>
-        <Button size="sm" variant="secondary" onClick={openCreate} className="text-xs h-8">
+        <Button size="sm" variant="secondary" onClick={openCreate} className="text-xs h-8 cursor-pointer">
           {t("customer_detail.add_contact")}
         </Button>
       </div>
 
       {contacts.length === 0 && (
-        <p className="text-xs text-slate-500 py-3">{t("customer_detail.contacts_empty")}</p>
+        <p className="text-xs text-[#576750] py-3">{t("customer_detail.contacts_empty")}</p>
       )}
 
       <ul className="space-y-2">
         {contacts.map((c) => (
           <li
             key={c.id}
-            className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${
-              c.is_primary ? "border-amber-200/90 bg-amber-50/40" : "border-slate-200/80 bg-white"
+            className={`flex items-center justify-between rounded-xl border p-3.5 transition-colors ${
+              c.is_primary ? "border-[#f2dcba] bg-[#fdf5e6]/60 shadow-2xs" : "border-[#dfd8c8] bg-[#ffffff] shadow-2xs"
             }`}
           >
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-slate-900">{c.name}</span>
+                <span className="text-sm font-serif font-bold text-[#182615]">{c.name}</span>
                 {c.is_primary && (
-                  <span className="rounded-full bg-amber-100 border border-amber-300 px-2 py-0.5 text-[10px] font-bold text-amber-900">
+                  <span className="rounded-full bg-[#fdeed6] border border-[#f2dcba] px-2 py-0.5 text-[10px] font-bold text-[#965a12] font-mono">
                     ★ {t("customer_detail.primary_badge")}
                   </span>
                 )}
-                {c.title && <span className="text-xs text-slate-500">· {c.title}</span>}
+                {c.title && <span className="text-xs text-[#576750]">· {c.title}</span>}
               </div>
-              <div className="mt-0.5 text-xs text-slate-500 truncate font-mono">
+              <div className="mt-1 text-xs text-[#576750] truncate font-mono">
                 {[c.phone, c.email].filter(Boolean).join(" · ") || t("common.empty_dash")}
               </div>
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0">
               <button
+                type="button"
                 onClick={() => togglePrimary(c)}
-                title="Toggle primary"
-                className={`rounded-md border px-2 py-1 text-xs font-medium transition ${
+                title="Toggle primary contact"
+                aria-label="Toggle primary contact"
+                className={`rounded-lg border px-2 py-1 text-xs font-medium transition cursor-pointer ${
                   c.is_primary
-                    ? "bg-amber-100/70 border-amber-300 text-amber-900"
-                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                    ? "bg-[#fdf5e6] border-[#f2dcba] text-[#965a12]"
+                    : "bg-[#ffffff] border-[#dfd8c8] text-[#576750] hover:bg-[#f7f4ed]"
                 }`}
               >
                 {c.is_primary ? "★" : "☆"}
               </button>
               <button
+                type="button"
                 onClick={() => openEdit(c)}
-                className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                className="rounded-lg border border-[#dfd8c8] bg-[#ffffff] px-2.5 py-1 text-xs font-semibold text-[#2d3e29] hover:bg-[#f7f4ed] hover:border-[#bcc6b1] transition cursor-pointer"
               >
                 {t("common.edit")}
               </button>
               <button
+                type="button"
                 onClick={() => onDelete(c)}
-                className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 hover:border-red-200 transition"
+                className="rounded-lg border border-[#dfd8c8] bg-[#ffffff] px-2.5 py-1 text-xs font-semibold text-[#a13d28] hover:bg-[#faedea] hover:border-[#f0c7be] transition cursor-pointer"
               >
                 {t("common.delete")}
               </button>
@@ -211,7 +215,7 @@ export function ContactSection({
                 placeholder="Giám đốc Tài chính (CFO)"
               />
             </FormField>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FormField label={t("customer_detail.contact_phone")}>
                 <Input
                   value={phone}
@@ -228,27 +232,27 @@ export function ContactSection({
                 />
               </FormField>
             </div>
-            <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer pt-1">
+            <label className="flex items-center gap-2 text-xs font-semibold text-[#2d3e29] cursor-pointer pt-1">
               <input
                 type="checkbox"
                 checked={is_primary}
                 onChange={(e) => setIsPrimary(e.target.checked)}
-                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                className="rounded border-[#dfd8c8] text-[#265e2b] focus:ring-[#265e2b]"
               />{" "}
               {t("customer_detail.contact_is_primary")}
             </label>
 
             {err && (
-              <p className="rounded-md bg-red-50 border border-red-200 p-2.5 text-xs text-red-700 font-medium">
+              <p role="alert" className="rounded-xl bg-[#faedea] border border-[#f0c7be] p-2.5 text-xs font-semibold text-[#a13d28]">
                 {err}
               </p>
             )}
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-              <Button type="button" variant="secondary" onClick={() => setShow(false)}>
+            <div className="flex justify-end gap-2 pt-3 border-t border-[#eee8db]">
+              <Button type="button" variant="secondary" onClick={() => setShow(false)} className="cursor-pointer">
                 {t("common.cancel")}
               </Button>
-              <Button type="submit" disabled={submitting}>
+              <Button type="submit" disabled={submitting} className="cursor-pointer">
                 {submitting ? t("common.saving") : editing ? t("common.save") : t("common.create")}
               </Button>
             </div>

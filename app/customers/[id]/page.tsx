@@ -205,66 +205,84 @@ export default function CustomerProfilePage() {
       </div>
 
       {/* Tab Navigation Strip */}
-      <div className="flex overflow-x-auto border-b border-[#dfd8c8] gap-1 text-xs font-semibold text-[#576750]">
+      <div className="flex overflow-x-auto border-b border-[#dfd8c8] gap-1 text-xs font-semibold text-[#576750]" role="tablist" aria-label="Customer profile tabs">
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "overview"}
           onClick={() => setActiveTab("overview")}
-          className={`px-4 py-2.5 border-b-2 transition-all whitespace-nowrap ${
+          className={`px-4 py-2.5 border-b-2 transition-all whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#265e2b] ${
             activeTab === "overview"
               ? "border-[#265e2b] text-[#265e2b] font-bold"
               : "border-transparent hover:text-[#182615] hover:border-[#bcc6b1]"
           }`}
         >
-          📋 {t("nav.overview")}
+          <span aria-hidden="true" className="mr-1">📋</span> {t("nav.overview")}
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "contacts"}
           onClick={() => setActiveTab("contacts")}
-          className={`px-4 py-2.5 border-b-2 transition-all whitespace-nowrap ${
+          className={`px-4 py-2.5 border-b-2 transition-all whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#265e2b] ${
             activeTab === "contacts"
               ? "border-[#265e2b] text-[#265e2b] font-bold"
               : "border-transparent hover:text-[#182615] hover:border-[#bcc6b1]"
           }`}
         >
-          👥 {t("customer_detail.tab_contacts")} ({contacts.length})
+          <span aria-hidden="true" className="mr-1">👥</span> {t("customer_detail.tab_contacts")} ({contacts.length})
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "notes"}
           onClick={() => setActiveTab("notes")}
-          className={`px-4 py-2.5 border-b-2 transition-all whitespace-nowrap ${
+          className={`px-4 py-2.5 border-b-2 transition-all whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#265e2b] ${
             activeTab === "notes"
               ? "border-[#265e2b] text-[#265e2b] font-bold"
               : "border-transparent hover:text-[#182615] hover:border-[#bcc6b1]"
           }`}
         >
-          📝 {t("customer_detail.tab_notes")} ({notes.length})
+          <span aria-hidden="true" className="mr-1">📝</span> {t("customer_detail.tab_notes")} ({notes.length})
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "tasks"}
           onClick={() => setActiveTab("tasks")}
-          className={`px-4 py-2.5 border-b-2 transition-all whitespace-nowrap ${
+          className={`px-4 py-2.5 border-b-2 transition-all whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#265e2b] ${
             activeTab === "tasks"
               ? "border-[#265e2b] text-[#265e2b] font-bold"
               : "border-transparent hover:text-[#182615] hover:border-[#bcc6b1]"
           }`}
         >
-          ✅ {t("customer_detail.tab_tasks")} ({tasks.length})
+          <span aria-hidden="true" className="mr-1">✅</span> {t("customer_detail.tab_tasks")} ({tasks.length})
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "feed"}
           onClick={() => setActiveTab("feed")}
-          className={`px-4 py-2.5 border-b-2 transition-all whitespace-nowrap ${
+          className={`px-4 py-2.5 border-b-2 transition-all whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#265e2b] ${
             activeTab === "feed"
               ? "border-[#265e2b] text-[#265e2b] font-bold"
               : "border-transparent hover:text-[#182615] hover:border-[#bcc6b1]"
           }`}
         >
-          ⏱️ {t("customer_detail.tab_feed")}
+          <span aria-hidden="true" className="mr-1">⏱️</span> {t("customer_detail.tab_feed")}
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "financials"}
           onClick={() => setActiveTab("financials")}
-          className={`px-4 py-2.5 border-b-2 transition-all whitespace-nowrap ${
+          className={`px-4 py-2.5 border-b-2 transition-all whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#265e2b] ${
             activeTab === "financials"
               ? "border-[#265e2b] text-[#265e2b] font-bold"
               : "border-transparent hover:text-[#182615] hover:border-[#bcc6b1]"
           }`}
         >
-          📊 {t("customer_detail.tab_financials")}
+          <span aria-hidden="true" className="mr-1">📊</span> {t("customer_detail.tab_financials")}
         </button>
       </div>
 

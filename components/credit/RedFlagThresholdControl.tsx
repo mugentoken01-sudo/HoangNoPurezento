@@ -44,26 +44,30 @@ export function RedFlagThresholdControl({
   }
 
   return (
-    <div className="rounded-xl border border-slate-200/90 bg-white shadow-2xs overflow-hidden">
+    <div className="rounded-2xl border border-[#dfd8c8] bg-[#ffffff] shadow-2xs overflow-hidden">
       <button
+        type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-slate-800 hover:bg-slate-50 transition"
+        aria-expanded={open}
+        aria-label="Cấu hình ngưỡng rủi ro / Toggle threshold settings"
+        className="w-full flex items-center justify-between px-5 py-3.5 text-xs font-serif font-bold text-[#182615] hover:bg-[#faf8f3] transition cursor-pointer"
       >
         <div className="flex items-center gap-2">
-          <span>⚙️ {t("credit.thresholds_title")}</span>
-          <span className="font-normal text-slate-400 hidden sm:inline">
+          <span aria-hidden="true">⚙️</span>
+          <span>{t("credit.thresholds_title")}</span>
+          <span className="font-sans font-normal text-[#576750] hidden sm:inline">
             — {t("credit.thresholds_desc")}
           </span>
         </div>
-        <span className="text-xs text-slate-400 font-mono">{open ? "▲" : "▼"}</span>
+        <span className="text-xs text-[#7d8c76] font-mono">{open ? "▲" : "▼"}</span>
       </button>
 
       {open && (
-        <div className="border-t border-slate-100 bg-slate-50/40 p-4 space-y-4">
-          <p className="text-xs text-slate-500 leading-relaxed">
+        <div className="border-t border-[#eee8db] bg-[#faf8f3]/80 p-5 space-y-4">
+          <p className="text-xs text-[#576750] leading-relaxed">
             {t("credit.thresholds_desc")}
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             <FormField label={t("credit.threshold_debt_growth")}>
               <Input
                 type="number"
@@ -110,11 +114,11 @@ export function RedFlagThresholdControl({
               />
             </FormField>
           </div>
-          <div className="flex gap-2 pt-1">
-            <Button size="sm" onClick={save} className="text-xs font-semibold">
+          <div className="flex gap-2.5 pt-2 border-t border-[#eee8db]">
+            <Button size="sm" onClick={save} className="text-xs font-semibold cursor-pointer">
               {t("credit.threshold_save")}
             </Button>
-            <Button size="sm" variant="secondary" onClick={reset} className="text-xs">
+            <Button size="sm" variant="secondary" onClick={reset} className="text-xs cursor-pointer">
               {t("credit.threshold_reset")}
             </Button>
           </div>

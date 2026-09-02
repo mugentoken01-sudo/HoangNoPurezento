@@ -169,16 +169,16 @@ export function FinancialStatementForm({
         </div>
 
         {err && (
-          <p className="rounded-md bg-red-50 border border-red-200 p-2.5 text-xs font-medium text-red-700">
+          <p role="alert" className="rounded-xl bg-[#faedea] border border-[#f0c7be] p-3 text-xs font-semibold text-[#a13d28]">
             {err}
           </p>
         )}
 
-        <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-          <Button type="button" variant="secondary" onClick={onClose}>
+        <div className="flex justify-end gap-2.5 pt-3 border-t border-[#eee8db]">
+          <Button type="button" variant="secondary" onClick={onClose} className="cursor-pointer">
             {t("common.cancel")}
           </Button>
-          <Button type="submit" disabled={submitting}>
+          <Button type="submit" disabled={submitting} className="cursor-pointer">
             {submitting ? t("common.saving") : isEdit ? t("common.save") : t("common.create")}
           </Button>
         </div>

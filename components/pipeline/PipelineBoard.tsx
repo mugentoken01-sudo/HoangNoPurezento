@@ -182,9 +182,9 @@ export function PipelineBoard() {
   if (loading) {
     return (
       <Card>
-        <CardBody className="py-12 text-center">
-          <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-slate-900 border-r-transparent" />
-          <p className="mt-2 text-xs font-medium text-slate-500">{t("common.loading")}</p>
+        <CardBody className="py-16 text-center">
+          <div className="inline-block h-7 w-7 animate-spin rounded-full border-2 border-[#265e2b] border-r-transparent" />
+          <p className="mt-3 text-xs font-semibold text-[#576750]">{t("common.loading")}</p>
         </CardBody>
       </Card>
     );
@@ -193,9 +193,9 @@ export function PipelineBoard() {
   if (err) {
     return (
       <Card>
-        <CardBody className="border-l-4 border-red-500 bg-red-50/50 p-6">
-          <p className="text-sm font-semibold text-red-700">{err}</p>
-          <Button variant="secondary" size="sm" className="mt-3 text-xs" onClick={fetchAll}>
+        <CardBody className="border-l-4 border-[#a13d28] bg-[#faedea] p-6">
+          <p role="alert" className="text-xs sm:text-sm font-semibold text-[#a13d28]">{err}</p>
+          <Button variant="secondary" size="sm" className="mt-3 text-xs font-semibold cursor-pointer" onClick={fetchAll}>
             {t("common.retry")}
           </Button>
         </CardBody>
@@ -213,16 +213,21 @@ export function PipelineBoard() {
         <div
           role="status"
           aria-live="polite"
-          className={`rounded-lg border p-3 text-xs font-semibold shadow-xs flex items-center justify-between ${
+          className={`rounded-xl border p-3.5 text-xs font-semibold shadow-xs flex items-center justify-between animate-in fade-in duration-150 ${
             toast.kind === "success"
-              ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+              ? "border-[#bde0c1] bg-[#eaf5eb] text-[#1b6325]"
               : toast.kind === "error"
-              ? "border-red-300 bg-red-50 text-red-800"
-              : "border-slate-300 bg-slate-50 text-slate-800"
+              ? "border-[#f0c7be] bg-[#faedea] text-[#a13d28]"
+              : "border-[#dfd8c8] bg-[#ffffff] text-[#182615]"
           }`}
         >
           <span>{toast.message}</span>
-          <button onClick={() => setToast(null)} className="text-slate-400 hover:text-slate-600 font-bold ml-2">
+          <button
+            type="button"
+            onClick={() => setToast(null)}
+            aria-label="Đóng thông báo / Dismiss notification"
+            className="text-[#576750] hover:text-[#182615] font-bold ml-2 cursor-pointer"
+          >
             ✕
           </button>
         </div>

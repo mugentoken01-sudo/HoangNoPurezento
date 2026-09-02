@@ -10,3 +10,5 @@ README.md.new
 .DS_Store
 .hallmark/
 qa-reports/
+qa-artifacts/
+scripts/*.py

@@ -49,6 +49,7 @@ export interface TranslationDictionary {
     customers: string;
     pipeline: string;
     dashboard: string;
+    settings: string;
     sign_in: string;
     sign_out: string;
     language: string;
@@ -263,8 +264,29 @@ export interface TranslationDictionary {
     excel_dialog_desc: string;
     excel_choose_file: string;
     excel_upload_success: string;
+    excel_prefill_btn: string;
+    manual_flag_period: string;
+    manual_flag_severity: string;
+    manual_flag_desc: string;
+    manual_flag_desc_placeholder: string;
+    feed_stage_change: string;
+    feed_stage_initial: string;
   };
   stages: Record<string, string>;
   action_types: Record<string, string>;
   task_statuses: Record<string, string>;
+  settings?: {
+    title: string;
+    subtitle: string;
+    byok_title: string;
+    byok_desc: string;
+    gemini_key_label: string;
+    gemini_key_hint: string;
+    save_locally: string;
+    clear_key: string;
+    key_saved: string;
+    key_cleared: string;
+    precedence_title: string;
+    precedence_desc: string;
+  };
 }

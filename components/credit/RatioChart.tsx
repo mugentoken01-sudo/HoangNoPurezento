@@ -75,7 +75,7 @@ const GROUPS: GroupDef[] = [
   },
 ];
 
-const COLORS = ["#2563eb", "#dc2626", "#059669", "#7c3aed", "#ea580c", "#0891b2"];
+const COLORS = ["#265e2b", "#b04e33", "#965a12", "#1e3a8a", "#41503b", "#059669"];
 
 function toChartData(ratios: FinancialRatio[], keys: (keyof FinancialRatio)[]) {
   const sorted = [...ratios].sort((a, b) => a.period.localeCompare(b.period));
@@ -91,7 +91,7 @@ export function RatioChart({ ratios }: Props) {
 
   if (!ratios.length) {
     return (
-      <p className="text-xs text-slate-500 py-3 text-center">
+      <p className="text-xs text-[#576750] py-4 text-center">
         {t("credit.no_bctc_yet")}
       </p>
     );
@@ -108,22 +108,24 @@ export function RatioChart({ ratios }: Props) {
         return (
           <div
             key={g.key}
-            className="rounded-lg border border-slate-200/90 bg-white p-4 shadow-2xs"
+            className="rounded-xl border border-[#dfd8c8] bg-[#ffffff] p-4 sm:p-5 shadow-2xs"
           >
-            <h4 className="text-xs font-bold text-slate-800 tracking-tight">{g.labelKey}</h4>
-            <div className="mt-3 h-[220px]">
+            <h4 className="text-xs font-serif font-bold text-[#182615] tracking-tight">{g.labelKey}</h4>
+            <div className="mt-3.5 h-[230px]">
               <ResponsiveContainer width="100%" height="100%">
                 {g.type === "line" ? (
-                  <LineChart data={data as never}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="period" tick={{ fontSize: 11, fill: "#64748b" }} />
-                    <YAxis tick={{ fontSize: 11, fill: "#64748b" }} width={48} />
+                  <LineChart data={data as never} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#eee8db" />
+                    <XAxis dataKey="period" tick={{ fontSize: 11, fill: "#576750" }} />
+                    <YAxis tick={{ fontSize: 11, fill: "#576750" }} width={44} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "#ffffff",
-                        borderColor: "#e2e8f0",
-                        borderRadius: "0.375rem",
+                        borderColor: "#dfd8c8",
+                        borderRadius: "0.5rem",
                         fontSize: "0.75rem",
+                        color: "#182615",
+                        boxShadow: "0 4px 12px rgba(24,38,21,0.08)",
                       }}
                     />
                     <Legend wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
@@ -141,16 +143,18 @@ export function RatioChart({ ratios }: Props) {
                     ))}
                   </LineChart>
                 ) : (
-                  <BarChart data={data as never}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="period" tick={{ fontSize: 11, fill: "#64748b" }} />
-                    <YAxis tick={{ fontSize: 11, fill: "#64748b" }} width={48} />
+                  <BarChart data={data as never} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#eee8db" />
+                    <XAxis dataKey="period" tick={{ fontSize: 11, fill: "#576750" }} />
+                    <YAxis tick={{ fontSize: 11, fill: "#576750" }} width={44} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "#ffffff",
-                        borderColor: "#e2e8f0",
-                        borderRadius: "0.375rem",
+                        borderColor: "#dfd8c8",
+                        borderRadius: "0.5rem",
                         fontSize: "0.75rem",
+                        color: "#182615",
+                        boxShadow: "0 4px 12px rgba(24,38,21,0.08)",
                       }}
                     />
                     <Legend wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
@@ -160,7 +164,7 @@ export function RatioChart({ ratios }: Props) {
                         dataKey={item.key as string}
                         fill={COLORS[(gi + idx) % COLORS.length]}
                         name={item.labelKey}
-                        radius={[2, 2, 0, 0]}
+                        radius={[3, 3, 0, 0]}
                       />
                     ))}
                   </BarChart>

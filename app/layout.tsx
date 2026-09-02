@@ -14,10 +14,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="vi" data-theme="garden">
       <body className="min-h-screen bg-[#f7f4ed] text-[#182615] antialiased selection:bg-[#265e2b] selection:text-[#faf8f2]">
         <I18nProvider>
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-[#265e2b] focus:px-4 focus:py-2 focus:text-xs focus:font-bold focus:text-[#faf8f2] focus:shadow-lg focus:outline-none"
+          >
+            Chuyển đến nội dung chính / Skip to main content
+          </a>
+
           <header className="sticky top-0 z-40 border-b border-[#dfd8c8]/90 bg-[#f7f4ed]/90 backdrop-blur-md shadow-[0_1px_3px_0_rgba(24,38,21,0.03)]">
             <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-3.5">
               <div className="flex items-center gap-3">
-                <Link href="/dashboard" className="flex items-center gap-2.5 group">
+                <Link href="/dashboard" className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#265e2b] rounded-lg p-0.5">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#265e2b] text-[#faf8f2] font-serif font-bold text-base shadow-sm group-hover:bg-[#1d4821] transition-colors">
                     RM
                   </div>
@@ -36,7 +43,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </header>
 
-          <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8 pb-20">{children}</main>
+          <main id="main-content" className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8 pb-20 focus:outline-none">
+            {children}
+          </main>
         </I18nProvider>
       </body>
     </html>
