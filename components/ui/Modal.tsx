@@ -1,5 +1,7 @@
 "use client";
-import React, { useEffect } from "react";
+
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export function Modal({
   open,
@@ -12,6 +14,12 @@ export function Modal({
   title: string;
   children: React.ReactNode;
 }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     function onKeyDown(e: KeyboardEvent) {
@@ -21,22 +29,32 @@ export function Modal({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
-  if (!open) return null;
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (!open || typeof document === "undefined") return;
+    const originalStyle = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, [open]);
 
-  return (
+  if (!open || !mounted || typeof document === "undefined") return null;
+
+  const content = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-label={title}
     >
       <div
-        className="fixed inset-0 bg-[#182615]/40 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-[#182615]/50 backdrop-blur-xs transition-opacity animate-in fade-in-0 duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-lg rounded-2xl border border-[#dfd8c8] bg-[#ffffff] shadow-[0_20px_50px_-20px_rgba(24,38,21,0.2),0_1px_3px_rgba(24,38,21,0.06)] max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150">
-        <div className="flex items-center justify-between border-b border-[#eee8db] bg-[#faf8f3]/90 px-5 py-3.5 sticky top-0 z-10">
+      <div className="relative z-10 w-full max-w-lg my-auto rounded-2xl border border-[#dfd8c8] bg-[#ffffff] shadow-[0_25px_60px_-15px_rgba(24,38,21,0.25),0_1px_3px_rgba(24,38,21,0.06)] max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150">
+        <div className="flex items-center justify-between border-b border-[#eee8db] bg-[#faf8f3] px-5 py-3.5 sticky top-0 z-10 shrink-0">
           <h3 className="text-sm sm:text-base font-serif font-bold text-[#182615] tracking-tight truncate pr-2">
             {title}
           </h3>
@@ -53,5 +71,6 @@ export function Modal({
       </div>
     </div>
   );
-}
 
+  return createPortal(content, document.body);
+}
