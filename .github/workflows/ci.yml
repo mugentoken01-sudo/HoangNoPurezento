@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint --if-present
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+      - name: Secret scan (no .env / service keys in repo)
+        run: |
+          ! git grep -n "sb_secret" -- ':!.github/workflows/ci.yml' ':!.env.example' || (echo "sb_secret found in tracked files"; exit 1)
+          ! git ls-files | grep -q "^\.env$" || (echo ".env tracked — should be gitignored"; exit 1)
+          echo "secret scan pass"

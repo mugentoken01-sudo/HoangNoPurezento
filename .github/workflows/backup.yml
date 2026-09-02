@@ -1,0 +1,33 @@
+name: Backup (Free tier — pg_dump)
+
+on:
+  schedule:
+    - cron: "0 18 * * *" # daily 01:00 +07 (18:00 UTC)
+  workflow_dispatch:
+
+jobs:
+  pg_dump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install pg client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Dump Supabase Postgres (requires secret)
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::warning::SUPABASE_DB_URL secret not set — skipping pg_dump. Set it in GitHub → Settings → Secrets → Actions."
+            echo "Free tier has no PITR (confirmed). This cron is the recovery path — set SUPABASE_DB_URL to enable."
+            exit 0
+          fi
+          pg_dump "$DATABASE_URL" --format=custom --compress=9 -f backup.dump
+          ls -lh backup.dump
+
+      - name: Upload artifact (7-day retention)
+        if: hashFiles('backup.dump') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-backup-${{ github.run_id }}
+          path: backup.dump
+          retention-days: 7

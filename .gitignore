@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+.env
+.env.local
+.vercel
+repomix-output.*
+README.md.new
+*.log
+.DS_Store
+.hallmark/
