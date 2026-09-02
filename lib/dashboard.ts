@@ -90,6 +90,19 @@ export type PendingRow = {
   inactive_days: number | null;
 };
 
+export type RiskSeverity = "low" | "medium" | "high";
+
+export type RiskDigestRow = {
+  customer_id: string;
+  company_name: string;
+  stage: PipelineStage;
+  worst_severity: RiskSeverity;
+  flag_count: number;
+  latest_rule_triggered: string;
+  latest_description: string;
+  latest_flag_at: string;
+};
+
 export type DashboardSummary = {
   generated_at: string;
   timezone: typeof DASHBOARD_TIMEZONE;
@@ -98,6 +111,7 @@ export type DashboardSummary = {
   today_tasks: TodayTaskRow[];
   pipeline: PipelineCount[];
   pending_customers: PendingRow[];
+  risk_digest: RiskDigestRow[];
   errors?: { widget: string; message: string }[];
 };
 
@@ -136,3 +150,65 @@ export function pipelineCountsFromCustomers(customers: { stage: string }[]): Pip
   }
   return PIPELINE_STAGES.map(s => ({ stage: s, count: map.get(s) ?? 0 }));
 }
+
+// ── Portfolio Risk Digest helpers ────────────────────────────────────────
+export const SEVERITY_RANK: Record<RiskSeverity, number> = { high: 0, medium: 1, low: 2 };
+
+export function buildRiskDigest(
+  customers: { id: string; company_name: string; stage: string; status?: string | null }[],
+  flags: { customer_id: string; severity: RiskSeverity; rule_triggered: string; description: string; created_at: string }[]
+): RiskDigestRow[] {
+  const custMap = new Map(
+    customers
+      .filter((c) => c.status !== "lost")
+      .map((c) => [c.id, c])
+  );
+  const grouped = new Map<string, RiskDigestRow>();
+
+  for (const f of flags) {
+    const cust = custMap.get(f.customer_id);
+    if (!cust) continue;
+
+    const existing = grouped.get(f.customer_id);
+    if (!existing) {
+      grouped.set(f.customer_id, {
+        customer_id: f.customer_id,
+        company_name: cust.company_name,
+        stage: (cust.stage as PipelineStage) || "lead",
+        worst_severity: f.severity,
+        flag_count: 1,
+        latest_rule_triggered: f.rule_triggered,
+        latest_description: f.description,
+        latest_flag_at: f.created_at,
+      });
+    } else {
+      existing.flag_count += 1;
+      if (SEVERITY_RANK[f.severity] < SEVERITY_RANK[existing.worst_severity]) {
+        existing.worst_severity = f.severity;
+      }
+      if (f.created_at > existing.latest_flag_at) {
+        existing.latest_rule_triggered = f.rule_triggered;
+        existing.latest_description = f.description;
+        existing.latest_flag_at = f.created_at;
+      } else if (f.created_at === existing.latest_flag_at) {
+        if (SEVERITY_RANK[f.severity] < SEVERITY_RANK[existing.worst_severity]) {
+          existing.latest_rule_triggered = f.rule_triggered;
+          existing.latest_description = f.description;
+        }
+      }
+    }
+  }
+
+  return Array.from(grouped.values());
+}
+
+export function sortRiskDigest(rows: RiskDigestRow[]): RiskDigestRow[] {
+  return [...rows].sort((a, b) => {
+    const diffSev = SEVERITY_RANK[a.worst_severity] - SEVERITY_RANK[b.worst_severity];
+    if (diffSev !== 0) return diffSev;
+    const diffTime = b.latest_flag_at.localeCompare(a.latest_flag_at);
+    if (diffTime !== 0) return diffTime;
+    return a.company_name.localeCompare(b.company_name);
+  });
+}
+

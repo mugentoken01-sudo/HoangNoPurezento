@@ -14,6 +14,8 @@ import {
   sortFollowUps,
   sortTodayTasks,
   pipelineCountsFromCustomers,
+  buildRiskDigest,
+  sortRiskDigest,
   DEFAULT_THRESHOLD_DAYS,
 } from "@/lib/dashboard";
 import type { FollowUpRow, TodayTaskRow } from "@/lib/dashboard";
@@ -130,5 +132,107 @@ describe("stale-response guard (gen counter)", () => {
   it("generation counter prevents stale overwrite (conceptual — board-state has same guard)", async () => {
     // This is covered by board-state.test.ts stale guard; dashboard uses same genRef pattern
     expect(true).toBe(true);
+  });
+});
+
+describe("Portfolio Risk Digest — buildRiskDigest & sortRiskDigest", () => {
+  it("case (a): mixed severities on one customer -> worst_severity is high, flag_count is 3", () => {
+    const customers = [
+      { id: "cust-1", company_name: "Alpha Corp", stage: "credit", status: "active" },
+    ];
+    const flags = [
+      { customer_id: "cust-1", severity: "low" as const, rule_triggered: "rev_drop", description: "Rev dropped 10%", created_at: "2026-09-01T10:00:00Z" },
+      { customer_id: "cust-1", severity: "high" as const, rule_triggered: "neg_equity", description: "Negative Equity", created_at: "2026-09-02T08:00:00Z" },
+      { customer_id: "cust-1", severity: "medium" as const, rule_triggered: "high_leverage", description: "D/E > 3.0", created_at: "2026-09-02T12:00:00Z" },
+    ];
+    const digest = buildRiskDigest(customers, flags);
+    expect(digest).toHaveLength(1);
+    expect(digest[0].worst_severity).toBe("high");
+    expect(digest[0].flag_count).toBe(3);
+    expect(digest[0].latest_rule_triggered).toBe("high_leverage");
+    expect(digest[0].latest_description).toBe("D/E > 3.0");
+    expect(digest[0].latest_flag_at).toBe("2026-09-02T12:00:00Z");
+  });
+
+  it("case (b): customer with status='lost' is excluded even if active flags exist", () => {
+    const customers = [
+      { id: "cust-lost", company_name: "Lost Corp", stage: "meeting", status: "lost" },
+      { id: "cust-active", company_name: "Active Corp", stage: "approved", status: "active" },
+    ];
+    const flags = [
+      { customer_id: "cust-lost", severity: "high" as const, rule_triggered: "default_risk", description: "Severe distress", created_at: "2026-09-02T10:00:00Z" },
+      { customer_id: "cust-active", severity: "low" as const, rule_triggered: "minor_drop", description: "Slight margin dip", created_at: "2026-09-01T10:00:00Z" },
+    ];
+    const digest = buildRiskDigest(customers, flags);
+    expect(digest).toHaveLength(1);
+    expect(digest[0].customer_id).toBe("cust-active");
+    expect(digest[0].company_name).toBe("Active Corp");
+  });
+
+  it("case (c): tied created_at timestamps produce stable, deterministic sort", () => {
+    const rows = [
+      {
+        customer_id: "c2",
+        company_name: "Zeta Logistics",
+        stage: "credit" as const,
+        worst_severity: "high" as const,
+        flag_count: 1,
+        latest_rule_triggered: "rule1",
+        latest_description: "desc1",
+        latest_flag_at: "2026-09-02T10:00:00Z",
+      },
+      {
+        customer_id: "c1",
+        company_name: "Beta Trading",
+        stage: "meeting" as const,
+        worst_severity: "high" as const,
+        flag_count: 1,
+        latest_rule_triggered: "rule2",
+        latest_description: "desc2",
+        latest_flag_at: "2026-09-02T10:00:00Z",
+      },
+    ];
+    const sorted = sortRiskDigest(rows);
+    expect(sorted.map(r => r.company_name)).toEqual(["Beta Trading", "Zeta Logistics"]);
+  });
+
+  it("case (d): zero flags anywhere returns empty array without errors", () => {
+    const customers = [{ id: "c1", company_name: "Healthy Corp", stage: "lead", status: "active" }];
+    const digest = buildRiskDigest(customers, []);
+    expect(digest).toEqual([]);
+    expect(sortRiskDigest(digest)).toEqual([]);
+  });
+
+  it("case (e): customer with zero flags does not appear in digest", () => {
+    const customers = [
+      { id: "c1", company_name: "Healthy Corp", stage: "lead", status: "active" },
+      { id: "c2", company_name: "Distressed Corp", stage: "credit", status: "active" },
+    ];
+    const flags = [
+      { customer_id: "c2", severity: "medium" as const, rule_triggered: "int_cov", description: "ICR < 1.5", created_at: "2026-09-02T10:00:00Z" },
+    ];
+    const digest = buildRiskDigest(customers, flags);
+    expect(digest).toHaveLength(1);
+    expect(digest[0].customer_id).toBe("c2");
+  });
+
+  it("case (f): flag with unmatched customer_id is safely ignored", () => {
+    const customers = [{ id: "c1", company_name: "Corp 1", stage: "lead", status: "active" }];
+    const flags = [
+      { customer_id: "c-other-owner", severity: "high" as const, rule_triggered: "rule", description: "desc", created_at: "2026-09-02T10:00:00Z" },
+    ];
+    const digest = buildRiskDigest(customers, flags);
+    expect(digest).toEqual([]);
+  });
+
+  it("sorting order: High before Medium before Low, newest first within tier, then alphabetical", () => {
+    const rows = [
+      { customer_id: "1", company_name: "Corp Low", stage: "lead" as const, worst_severity: "low" as const, flag_count: 1, latest_rule_triggered: "r", latest_description: "d", latest_flag_at: "2026-09-03T10:00:00Z" },
+      { customer_id: "2", company_name: "Corp High Old", stage: "lead" as const, worst_severity: "high" as const, flag_count: 1, latest_rule_triggered: "r", latest_description: "d", latest_flag_at: "2026-09-01T10:00:00Z" },
+      { customer_id: "3", company_name: "Corp High New", stage: "lead" as const, worst_severity: "high" as const, flag_count: 1, latest_rule_triggered: "r", latest_description: "d", latest_flag_at: "2026-09-02T10:00:00Z" },
+      { customer_id: "4", company_name: "Corp Medium", stage: "lead" as const, worst_severity: "medium" as const, flag_count: 1, latest_rule_triggered: "r", latest_description: "d", latest_flag_at: "2026-09-02T10:00:00Z" },
+    ];
+    const sorted = sortRiskDigest(rows);
+    expect(sorted.map(r => r.customer_id)).toEqual(["3", "2", "4", "1"]);
   });
 });

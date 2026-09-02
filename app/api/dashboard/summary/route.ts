@@ -13,9 +13,13 @@ import {
   sortFollowUps,
   sortTodayTasks,
   pipelineCountsFromCustomers,
+  buildRiskDigest,
+  sortRiskDigest,
   type FollowUpRow,
   type TodayTaskRow,
   type PendingRow,
+  type RiskDigestRow,
+  type RiskSeverity,
   type DashboardSummary,
 } from "@/lib/dashboard";
 import { PIPELINE_STAGES } from "@/lib/pipeline-stages";
@@ -33,7 +37,7 @@ export async function GET(req: Request) {
   // Bounded parallel fetches — all owner-scoped via RLS (supabase client is authenticated)
   // We use allSettled so one widget failure doesn't erase others.
 
-  const pCustomers = supabase.from("customers").select("id, company_name, stage, created_at").order("created_at", { ascending: false }).limit(500);
+  const pCustomers = supabase.from("customers").select("id, company_name, stage, status, created_at").order("created_at", { ascending: false }).limit(500);
   const pNotesFollow = supabase
     .from("notes")
     .select("id, customer_id, content, next_action_type, next_action_date, created_at, customers(company_name)")
@@ -52,18 +56,25 @@ export async function GET(req: Request) {
   // For pending: need last activity per customer — fetch recent notes/tasks (bounded) and reduce
   const pNotesRecent = supabase.from("notes").select("customer_id, created_at").order("created_at", { ascending: false }).limit(1000);
   const pTasksRecent = supabase.from("tasks").select("customer_id, created_at").order("created_at", { ascending: false }).limit(1000);
+  // For risk digest: active red flags across portfolio (bounded)
+  const pRedFlags = supabase
+    .from("red_flags")
+    .select("customer_id, severity, rule_triggered, description, created_at")
+    .order("created_at", { ascending: false })
+    .limit(300);
 
-  const [rCustomers, rNotesFollow, rTasksToday, rNotesRecent, rTasksRecent] = await Promise.allSettled([
+  const [rCustomers, rNotesFollow, rTasksToday, rNotesRecent, rTasksRecent, rRedFlags] = await Promise.allSettled([
     pCustomers,
     pNotesFollow,
     pTasksToday,
     pNotesRecent,
     pTasksRecent,
+    pRedFlags,
   ]);
 
   // --- Pipeline (from customers) ---
   let pipeline = PIPELINE_STAGES.map(s => ({ stage: s as never, count: 0 }));
-  let customers: { id: string; company_name: string; stage: string; created_at: string }[] = [];
+  let customers: { id: string; company_name: string; stage: string; status?: string | null; created_at: string }[] = [];
   if (rCustomers.status === "fulfilled" && !rCustomers.value.error) {
     customers = (rCustomers.value.data as typeof customers) ?? [];
     pipeline = pipelineCountsFromCustomers(customers) as typeof pipeline;
@@ -189,6 +200,23 @@ export async function GET(req: Request) {
     if (rTasksRecent.status === "rejected") errors.push({ widget: "pending", message: String(rTasksRecent.reason) });
   }
 
+  // --- Portfolio Risk Digest ---
+  let risk_digest: RiskDigestRow[] = [];
+  if (rRedFlags.status === "fulfilled" && !rRedFlags.value.error) {
+    const flagRows = (rRedFlags.value.data as unknown as {
+      customer_id: string;
+      severity: RiskSeverity;
+      rule_triggered: string;
+      description: string;
+      created_at: string;
+    }[]) ?? [];
+    risk_digest = sortRiskDigest(buildRiskDigest(customers, flagRows)).slice(0, 20);
+  } else if (rRedFlags.status === "fulfilled" && rRedFlags.value.error) {
+    errors.push({ widget: "risk_digest", message: rRedFlags.value.error.message });
+  } else if (rRedFlags.status === "rejected") {
+    errors.push({ widget: "risk_digest", message: String(rRedFlags.reason) });
+  }
+
   const payload: DashboardSummary = {
     generated_at,
     timezone: DASHBOARD_TIMEZONE,
@@ -197,6 +225,7 @@ export async function GET(req: Request) {
     today_tasks,
     pipeline,
     pending_customers,
+    risk_digest,
     ...(errors.length ? { errors } : {}),
   };
 
